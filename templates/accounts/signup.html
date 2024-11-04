@@ -1,0 +1,10 @@
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <label for="user_type">Select User Type:</label>
+    <select name="user_type" id="user_type">
+        <option value="driver">Driver</option>
+        <option value="user">User</option>
+    </select>
+    <button type="submit">Sign Up</button>
+</form>
