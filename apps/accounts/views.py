@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.http import HttpResponse
 
 def index(request):
-    return HttpResponse("Welcome to the Accounts App")
+    return HttpResponse("Welcome to the 어우송 YMS App")
 
 def start(request):
     return HttpResponse("This is the start page.")
