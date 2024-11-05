@@ -1,10 +1,11 @@
+<!-- templates/accounts/signup.html -->
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <label for="user_type">Select User Type:</label>
+    <label for="user_type">User Type:</label>
     <select name="user_type" id="user_type">
-        <option value="driver">Driver</option>
-        <option value="user">User</option>
+        <option value="admin">Admin</option>
+        <option value="employee">Employee</option>
     </select>
     <button type="submit">Sign Up</button>
 </form>

@@ -14,11 +14,11 @@ def start(request):
 def signup(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
-        user_type = request.POST.get('user_type')  # 운전자 or 사용자 선택
+        user_type = request.POST.get('user_type')  # Admin or Employee 선택
 
         if form.is_valid():
             user = form.save()
-            user.profile.user_type = user_type  # 추가한 user_type 필드를 저장
+            user.profile.user_type = user_type  # Profile에 user_type 저장
             user.profile.save()
             login(request, user)
             messages.success(request, f'Account created for {user.username} as {user_type}')
@@ -35,7 +35,10 @@ def login_view(request):
         
         if user is not None:
             login(request, user)
-            messages.success(request, 'Logged in successfully')
+            if user.profile.user_type == 'admin':
+                messages.success(request, 'Logged in as Admin')
+            else:
+                messages.success(request, 'Logged in as Employee')
             return redirect('accounts:index')
         else:
             messages.error(request, 'Invalid username or password')
