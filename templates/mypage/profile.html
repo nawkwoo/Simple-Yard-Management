@@ -1,0 +1,12 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+    <h1>{{ user.username }}'s Profile</h1>
+    <p>Email: {{ user.email }}</p>
+    <p>Gender: {{ user.gender }}</p>
+    <p>Birth Date: {{ user.birth_date }}</p>
+    <p>Has Car: {{ user.has_car }}</p>
+    <a href="{% url 'mypage:edit' %}">Edit Profile</a>
+{% endblock %}
