@@ -1,30 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>회원가입</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <h1>회원가입</h1>
-    <form method="post" action="{% url 'accounts:signup' %}">
-        {% csrf_token %}
-        
-        <!-- 사용자 유형 선택 -->
-        <label for="user_type">회원 유형:</label>
-        <select name="user_type" id="user_type" required>
-            <option value="admin">관리자</option>
-            <option value="staff">직원</option>
-        </select>
-        <br><br>
+    <div class="signup-container">
+        <div class="signup-box">
+            <div class="signup-header">
+                <h1>회원가입</h1>
+                <p class="subtitle">야드 관리 시스템에 오신 것을 환영합니다</p>
+            </div>
+            
+            <form method="post" action="{% url 'accounts:signup' %}" class="signup-form">
+                {% csrf_token %}
+                
+                <div class="input-group">
+                    <div class="select-field">
+                        <select name="user_type" id="user_type" required>
+                            <option value="" disabled selected>회원 유형을 선택하세요</option>
+                            <option value="admin">관리자</option>
+                            <option value="staff">직원</option>
+                        </select>
+                    </div>
 
-        <!-- 사용자 정보 입력 -->
-        {{ form.as_p }}
-        
-        <!-- 제출 버튼 -->
-        <button type="submit">회원가입</button>
-    </form>
+                    <div class="input-field">
+                        <i class="fas fa-user"></i>
+                        <input type="text" name="username" placeholder="아이디" required>
+                    </div>
 
-    <!-- 로그인 페이지로 이동 -->
-    <p>이미 계정이 있으신가요? <a href="{% url 'accounts:login' %}">로그인</a></p>
+                    <div class="input-field">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="password1" placeholder="비밀번호" required>
+                    </div>
+
+                    <div class="input-field">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="password2" placeholder="비밀번호 확인" required>
+                    </div>
+                </div>
+
+                <div class="terms-container">
+                    <label class="terms-label">
+                        <input type="checkbox" required>
+                        <span>이용약관 및 개인정보처리방침에 동의합니다</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="signup-submit-btn">회원가입 완료</button>
+            </form>
+
+            <div class="login-link">
+                <p>이미 계정이 있으신가요? <a href="{% url 'accounts:login' %}">로그인</a></p>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
