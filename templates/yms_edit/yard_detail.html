@@ -27,6 +27,8 @@
     </ul>
 
     <a href="{% url 'yms_edit:yard-update' pk=yard.pk %}">수정하기</a>
+    <a href="{% url 'yms_edit:yard-delete' pk=yard.pk %}">삭제하기</a>
+
     <!-- 뒤로 가기 -->
     <a href="{% url 'yms_edit:equipment-list' %}">뒤로 가기</a>
 </body>

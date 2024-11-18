@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
 from .models import Yard, Site, Truck, Chassis, Container, Trailer
 from .forms import YardCreateForm, TruckForm, ChassisForm, ContainerForm, TrailerForm
@@ -29,7 +29,7 @@ class EquipmentAndYardListView(ListView):
         return context
 
 
-# --- Yard Create View ---
+# --- Yard Views ---
 class YardCreateView(CreateView):
     """야드 추가 뷰"""
     model = Yard
@@ -41,7 +41,6 @@ class YardCreateView(CreateView):
         response = super().form_valid(form)
         equipment_types = form.cleaned_data['equipment_types']
         for equipment_type in equipment_types:
-            # 장비 타입에 맞는 수용 용량 설정
             capacity = Site.CAPACITY_MAPPING.get(equipment_type, 30)
             Site.objects.create(
                 yard=self.object,
@@ -52,16 +51,16 @@ class YardCreateView(CreateView):
         return response
 
     def get_success_url(self):
-        """이큅먼트 및 야드 리스트 페이지로 리다이렉션"""
         return reverse_lazy('yms_edit:equipment-list')
 
-# --- Yard Detail View ---
+
 class YardDetailView(DetailView):
     """야드 상세 보기 뷰"""
     model = Yard
     template_name = 'yms_edit/yard_detail.html'
     context_object_name = 'yard'
-    
+
+
 class YardUpdateView(UpdateView):
     """야드 수정 뷰"""
     model = Yard
@@ -72,28 +71,38 @@ class YardUpdateView(UpdateView):
         """야드 및 사이트 업데이트"""
         response = super().form_valid(form)
         equipment_types = form.cleaned_data['equipment_types']
-        # 기존 사이트 삭제 후 새로 추가
         self.object.sites.all().delete()
         for equipment_type in equipment_types:
             Site.objects.create(
                 yard=self.object,
-                equipment_type=equipment_type
+                equipment_type=equipment_type,
+                capacity=Site.CAPACITY_MAPPING.get(equipment_type, 30)
             )
         messages.success(self.request, "야드와 사이트가 성공적으로 수정되었습니다.")
         return response
 
     def get_success_url(self):
-        """수정 후 리다이렉션"""
         return reverse_lazy('yms_edit:equipment-list')
 
-# --- Equipment Detail View ---
+
+class YardDeleteView(DeleteView):
+    """야드 삭제 뷰"""
+    model = Yard
+    template_name = 'yms_edit/yard_confirm_delete.html'
+    context_object_name = 'yard'
+
+    def get_success_url(self):
+        messages.success(self.request, "야드가 성공적으로 삭제되었습니다.")
+        return reverse_lazy('yms_edit:equipment-list')
+
+
+# --- Equipment Views ---
 class EquipmentDetailView(DetailView):
     """장비 상세 보기 뷰"""
     template_name = 'yms_edit/equipment_detail.html'
     context_object_name = 'equipment'
 
     def get_object(self):
-        """장비 객체 반환"""
         model = self.kwargs.get('model')
         pk = self.kwargs.get('pk')
         model_class = {
@@ -107,19 +116,16 @@ class EquipmentDetailView(DetailView):
         return get_object_or_404(model_class, pk=pk)
 
     def get_context_data(self, **kwargs):
-        """모델 이름을 컨텍스트에 추가"""
         context = super().get_context_data(**kwargs)
-        context['model_name'] = self.kwargs.get('model')  # 모델 이름 추가
+        context['model_name'] = self.kwargs.get('model')
         return context
 
 
-# --- Equipment Create View ---
 class EquipmentCreateView(CreateView):
     """장비 추가 뷰"""
     template_name = 'yms_edit/equipment_form.html'
 
     def get_form_class(self):
-        """폼 클래스 동적 반환"""
         model = self.kwargs.get('model')
         form_class = {
             'truck': TruckForm,
@@ -132,7 +138,6 @@ class EquipmentCreateView(CreateView):
         return form_class
 
     def form_valid(self, form):
-        """유효성 검사 및 저장"""
         site = form.cleaned_data['site']
         model_name = self.kwargs.get('model').capitalize()
         if site.equipment_type != model_name:
@@ -142,16 +147,14 @@ class EquipmentCreateView(CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        """이큅먼트 및 야드 리스트 페이지로 리다이렉션"""
         return reverse_lazy('yms_edit:equipment-list')
-    
-    
+
+
 class EquipmentUpdateView(UpdateView):
     """장비 수정 뷰"""
     template_name = 'yms_edit/equipment_form.html'
 
     def get_form_class(self):
-        """폼 클래스 동적 반환"""
         model = self.kwargs.get('model')
         form_class = {
             'truck': TruckForm,
@@ -164,7 +167,6 @@ class EquipmentUpdateView(UpdateView):
         return form_class
 
     def get_object(self):
-        """수정할 장비 객체 반환"""
         model = self.kwargs.get('model')
         pk = self.kwargs.get('pk')
         model_class = {
@@ -178,7 +180,6 @@ class EquipmentUpdateView(UpdateView):
         return get_object_or_404(model_class, pk=pk)
 
     def form_valid(self, form):
-        """유효성 검사 및 저장"""
         site = form.cleaned_data['site']
         model_name = self.kwargs.get('model').capitalize()
         if site.equipment_type != model_name:
@@ -188,5 +189,26 @@ class EquipmentUpdateView(UpdateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        """수정 후 리다이렉션"""
+        return reverse_lazy('yms_edit:equipment-list')
+
+
+class EquipmentDeleteView(DeleteView):
+    """장비 삭제 뷰"""
+    template_name = 'yms_edit/equipment_confirm_delete.html'
+
+    def get_object(self):
+        model = self.kwargs.get('model')
+        pk = self.kwargs.get('pk')
+        model_class = {
+            'truck': Truck,
+            'chassis': Chassis,
+            'container': Container,
+            'trailer': Trailer,
+        }.get(model)
+        if not model_class:
+            raise Http404("잘못된 모델입니다.")
+        return get_object_or_404(model_class, pk=pk)
+
+    def get_success_url(self):
+        messages.success(self.request, "장비가 성공적으로 삭제되었습니다.")
         return reverse_lazy('yms_edit:equipment-list')

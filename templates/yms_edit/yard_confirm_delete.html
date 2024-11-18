@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>야드 삭제 확인</title>
+</head>
+<body>
+    <h1>야드 삭제</h1>
+    <p>정말로 이 야드를 삭제하시겠습니까?</p>
+    <p><strong>{{ yard.division.full_name }} - {{ yard.yard_id }}</strong></p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">삭제</button>
+        <a href="{% url 'yms_edit:equipment-list' %}">취소</a>
+    </form>
+</body>
+</html>

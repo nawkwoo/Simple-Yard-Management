@@ -1,6 +1,7 @@
 from django import forms
 from .models import Division, Yard, Site, Truck, Chassis, Container, Trailer
 
+# --- Yard Form ---
 class YardCreateForm(forms.ModelForm):
     """야드 추가/수정 폼"""
     division = forms.ModelChoiceField(
@@ -20,10 +21,9 @@ class YardCreateForm(forms.ModelForm):
         fields = ['division', 'yard_id', 'is_active']
 
     def __init__(self, *args, **kwargs):
-        """초기값 설정"""
+        """기존 데이터 초기값 설정"""
         if 'instance' in kwargs:
             instance = kwargs['instance']
-            # 기존 사이트의 equipment_type 값을 초기값으로 설정
             kwargs['initial'] = kwargs.get('initial', {})
             kwargs['initial']['equipment_types'] = [
                 site.equipment_type for site in instance.sites.all()
@@ -31,8 +31,9 @@ class YardCreateForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
 
+# --- Truck Form ---
 class TruckForm(forms.ModelForm):
-    """트럭 추가 폼"""
+    """트럭 추가/수정 폼"""
     class Meta:
         model = Truck
         fields = ['site', 'truck_id', 'serial_number', 'image', 'is_active']
@@ -49,8 +50,9 @@ class TruckForm(forms.ModelForm):
         }
 
 
+# --- Chassis Form ---
 class ChassisForm(forms.ModelForm):
-    """샤시 추가 폼"""
+    """샤시 추가/수정 폼"""
     class Meta:
         model = Chassis
         fields = ['site', 'chassis_id', 'type', 'serial_number', 'image', 'is_active']
@@ -67,8 +69,9 @@ class ChassisForm(forms.ModelForm):
         }
 
 
+# --- Container Form ---
 class ContainerForm(forms.ModelForm):
-    """컨테이너 추가 폼"""
+    """컨테이너 추가/수정 폼"""
     class Meta:
         model = Container
         fields = ['site', 'container_id', 'size', 'type', 'serial_number', 'image', 'is_active']
@@ -86,8 +89,9 @@ class ContainerForm(forms.ModelForm):
         }
 
 
+# --- Trailer Form ---
 class TrailerForm(forms.ModelForm):
-    """트레일러 추가 폼"""
+    """트레일러 추가/수정 폼"""
     class Meta:
         model = Trailer
         fields = ['site', 'trailer_id', 'size', 'serial_number', 'image', 'is_active']
