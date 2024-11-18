@@ -12,7 +12,11 @@
     <h2>야드 리스트</h2>
     <ul>
         {% for yard in yards %}
-            <li>{{ yard.division.name }} - {{ yard.yard_id }} ({{ yard.is_active|yesno:"활성화,비활성화" }})</li>
+            <li>
+                <a href="{% url 'yms_edit:yard-detail' pk=yard.pk %}">
+                    {{ yard.division.name }} - {{ yard.yard_id }} ({{ yard.is_active|yesno:"활성화,비활성화" }})
+                </a>
+            </li>
         {% endfor %}
     </ul>
     <a href="{% url 'yms_edit:yard-add' %}">야드 추가</a>

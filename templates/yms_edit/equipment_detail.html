@@ -3,19 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>장비 상세</title>
+    <title>장비 상세 정보</title>
 </head>
 <body>
-    <h1>장비 상세</h1>
-    <p>장비 유형: {{ equipment.__class__.__name__ }}</p>
-    <p>시리얼 번호: {{ equipment.serial_number }}</p>
-    <p>이미지:</p>
+    <h1>장비 상세 정보</h1>
+    <p><strong>장비 타입:</strong> {{ equipment_type }}</p>
+    <p><strong>시리얼 번호:</strong> {{ equipment.serial_number }}</p>
+    <p><strong>활성 상태:</strong> {{ equipment.is_active|yesno:"활성화,비활성화" }}</p>
+    <p><strong>관련 사이트:</strong> {{ equipment.site }}</p>
+    <p><strong>이미지:</strong></p>
     {% if equipment.image %}
-        <img src="{{ equipment.image.url }}" alt="{{ equipment.serial_number }}" style="max-width: 300px;">
+        <img src="{{ equipment.image.url }}" alt="장비 이미지" style="max-width: 300px;">
     {% else %}
         <p>이미지가 없습니다.</p>
     {% endif %}
-    <p>상태: {{ equipment.is_active|yesno:"활성화됨,비활성화됨" }}</p>
-    <a href="{% url 'yms_edit:equipment-list' %}">목록으로 돌아가기</a>
+    <a href="{% url 'yms_edit:equipment-edit' model=model_name pk=equipment.pk %}">수정하기</a>
+
+    <a href="{% url 'yms_edit:equipment-list' %}">뒤로 가기</a>
 </body>
 </html>

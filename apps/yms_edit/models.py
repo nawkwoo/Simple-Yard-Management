@@ -59,12 +59,26 @@ class Site(BaseModel):
         ('Container', 'Container'),
         ('Trailer', 'Trailer')
     ]
+
+    CAPACITY_MAPPING = {
+        'Truck': 30,
+        'Chassis': 20,
+        'Container': 40,
+        'Trailer': 10,
+    }
+
     yard = models.ForeignKey(Yard, on_delete=models.CASCADE, related_name="sites")
     equipment_type = models.CharField(max_length=10, choices=EQUIPMENT_TYPE_CHOICES)
-    capacity = models.PositiveIntegerField(default=30)
+    capacity = models.PositiveIntegerField()
 
     def __str__(self):
         return f"{self.yard.yard_id} - {self.equipment_type} Site"
+
+    def save(self, *args, **kwargs):
+        """장비 타입에 따라 수용 용량 자동 설정"""
+        if not self.capacity:  # 수동으로 설정하지 않았을 때만 적용
+            self.capacity = self.CAPACITY_MAPPING.get(self.equipment_type, 30)
+        super().save(*args, **kwargs)
 
 # --- Driver ---
 class Driver(BaseModel):
