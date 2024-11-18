@@ -22,7 +22,7 @@ def signup(request):
             user.profile.save()
             login(request, user)
             messages.success(request, f'Account created for {user.username} as {user_type}')
-            return redirect('accounts:index')
+            return redirect('accouns:index')
     else:
         form = UserCreationForm()
     return render(request, 'accounts/signup.html', {'form': form})
