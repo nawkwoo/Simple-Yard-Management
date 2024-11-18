@@ -4,63 +4,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>이큅먼트 및 야드 리스트</title>
+    <style>
+        .filter-buttons button {
+            margin: 5px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+        }
+        .filter-buttons button.active {
+            background-color: #007BFF;
+            color: white;
+        }
+    </style>
 </head>
 <body>
     <h1>장비 및 야드 리스트</h1>
 
-    <!-- 야드 리스트 -->
-    <h2>야드 리스트</h2>
-    <ul>
-        {% for yard in yards %}
-            <li>
-                <a href="{% url 'yms_edit:yard-detail' pk=yard.pk %}">
-                    {{ yard.division.name }} - {{ yard.yard_id }} ({{ yard.is_active|yesno:"활성화,비활성화" }})
-                </a>
-            </li>
-        {% endfor %}
-    </ul>
-    <a href="{% url 'yms_edit:yard-add' %}">야드 추가</a>
+    <!-- 필터 영역 -->
+    <div>
+        <h2>야드 필터링</h2>
+        <div class="filter-buttons">
+            <button onclick="applyFilter({ yard: '' })">전체 야드</button>
+            {% for yard in yards %}
+                <button onclick="applyFilter({ yard: '{{ yard.id }}' })">{{ yard.division.name }} - {{ yard.yard_id }}</button>
+            {% endfor %}
+        </div>
 
-    <!-- 장비 리스트 -->
+        <h2>장비 타입 필터링</h2>
+        <div class="filter-buttons">
+            <button onclick="toggleTypeFilter('truck')">트럭</button>
+            <button onclick="toggleTypeFilter('chassis')">샤시</button>
+            <button onclick="toggleTypeFilter('container')">컨테이너</button>
+            <button onclick="toggleTypeFilter('trailer')">트레일러</button>
+        </div>
+    </div>
+
+    <!-- 결과 영역 -->
     <h2>장비 리스트</h2>
     <ul>
         {% for truck in trucks %}
-            <li>
-                <a href="{% url 'yms_edit:equipment-detail' model='truck' pk=truck.pk %}">
-                    트럭: {{ truck.truck_id }} - {{ truck.serial_number }}
-                </a>
-            </li>
+            <li>트럭: {{ truck.truck_id }} - {{ truck.serial_number }}</li>
         {% endfor %}
         {% for chassis in chassis %}
-            <li>
-                <a href="{% url 'yms_edit:equipment-detail' model='chassis' pk=chassis.pk %}">
-                    샤시: {{ chassis.chassis_id }} - {{ chassis.serial_number }}
-                </a>
-            </li>
+            <li>샤시: {{ chassis.chassis_id }} - {{ chassis.serial_number }}</li>
         {% endfor %}
         {% for container in containers %}
-            <li>
-                <a href="{% url 'yms_edit:equipment-detail' model='container' pk=container.pk %}">
-                    컨테이너: {{ container.container_id }} - {{ container.serial_number }}
-                </a>
-            </li>
+            <li>컨테이너: {{ container.container_id }} - {{ container.serial_number }}</li>
         {% endfor %}
         {% for trailer in trailers %}
-            <li>
-                <a href="{% url 'yms_edit:equipment-detail' model='trailer' pk=trailer.pk %}">
-                    트레일러: {{ trailer.trailer_id }} - {{ trailer.serial_number }}
-                </a>
-            </li>
+            <li>트레일러: {{ trailer.trailer_id }} - {{ trailer.serial_number }}</li>
         {% endfor %}
     </ul>
 
-    <!-- 장비 추가 버튼 -->
-    <h2>장비 추가</h2>
-    <div>
-        <a href="{% url 'yms_edit:equipment-add' model='truck' %}">트럭 추가</a> |
-        <a href="{% url 'yms_edit:equipment-add' model='chassis' %}">샤시 추가</a> |
-        <a href="{% url 'yms_edit:equipment-add' model='container' %}">컨테이너 추가</a> |
-        <a href="{% url 'yms_edit:equipment-add' model='trailer' %}">트레일러 추가</a>
-    </div>
+    <!-- JavaScript -->
+    <script>
+        const selectedTypes = new Set();
+
+        function applyFilter(params) {
+            const url = new URL(window.location.href);
+            Object.keys(params).forEach(key => {
+                if (params[key]) {
+                    url.searchParams.set(key, params[key]);
+                } else {
+                    url.searchParams.delete(key);
+                }
+            });
+            window.location.href = url.toString();
+        }
+
+        function toggleTypeFilter(type) {
+            const button = document.querySelector(`button[onclick="toggleTypeFilter('${type}')"]`);
+            if (selectedTypes.has(type)) {
+                selectedTypes.delete(type);
+                button.classList.remove('active');
+            } else {
+                selectedTypes.add(type);
+                button.classList.add('active');
+            }
+            applyFilter({ types: Array.from(selectedTypes).join(',') });
+        }
+    </script>
 </body>
 </html>

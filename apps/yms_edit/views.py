@@ -8,26 +8,47 @@ from .forms import YardCreateForm, TruckForm, ChassisForm, ContainerForm, Traile
 
 # --- Equipment and Yard List View ---
 class EquipmentAndYardListView(ListView):
-    """장비와 야드 목록 뷰"""
     template_name = 'yms_edit/equipment_list.html'
     context_object_name = 'equipments'
 
     def get_queryset(self):
-        """장비 및 야드 데이터 쿼리셋"""
+        trucks = Truck.objects.filter(is_active=True)
+        chassis = Chassis.objects.filter(is_active=True)
+        containers = Container.objects.filter(is_active=True)
+        trailers = Trailer.objects.filter(is_active=True)
+        yards = Yard.objects.filter(is_active=True)
+
+        yard_id = self.request.GET.get('yard')
+        types = self.request.GET.get('types')
+
+        # 야드 필터링
+        if yard_id:
+            yards = yards.filter(id=yard_id)
+            trucks = trucks.filter(site__yard_id=yard_id)
+            chassis = chassis.filter(site__yard_id=yard_id)
+            containers = containers.filter(site__yard_id=yard_id)
+            trailers = trailers.filter(site__yard_id=yard_id)
+
+        # 장비 타입 필터링
+        if types:
+            selected_types = types.split(',')
+            trucks = trucks if 'truck' in selected_types else trucks.none()
+            chassis = chassis if 'chassis' in selected_types else chassis.none()
+            containers = containers if 'container' in selected_types else containers.none()
+            trailers = trailers if 'trailer' in selected_types else trailers.none()
         return {
-            'trucks': Truck.objects.filter(is_active=True),
-            'chassis': Chassis.objects.filter(is_active=True),
-            'containers': Container.objects.filter(is_active=True),
-            'trailers': Trailer.objects.filter(is_active=True),
-            'yards': Yard.objects.filter(is_active=True),
+            'trucks': trucks,
+            'chassis': chassis,
+            'containers': containers,
+            'trailers': trailers,
+            'yards': yards,
         }
 
     def get_context_data(self, **kwargs):
-        """컨텍스트에 야드와 장비 데이터 추가"""
+        """컨텍스트에 데이터 추가"""
         context = super().get_context_data(**kwargs)
         context.update(self.get_queryset())
         return context
-
 
 # --- Yard Views ---
 class YardCreateView(CreateView):
