@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>장비 목록</title>
+</head>
+<body>
+    <h1>장비 목록</h1>
+    <ul>
+        {% for equipment in equipments %}
+            <li>
+                <a href="{% url 'yms_edit:equipment-detail' model=equipment._meta.model_name pk=equipment.pk %}">
+                    {{ equipment.serial_number }} - {{ equipment }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'yms_edit:equipment-add' model='truck' %}">트럭 추가</a> |
+    <a href="{% url 'yms_edit:equipment-add' model='chassis' %}">샤시 추가</a> |
+    <a href="{% url 'yms_edit:equipment-add' model='container' %}">컨테이너 추가</a> |
+    <a href="{% url 'yms_edit:equipment-add' model='trailer' %}">트레일러 추가</a>
+</body>
+</html>

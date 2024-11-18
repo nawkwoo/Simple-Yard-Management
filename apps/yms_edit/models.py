@@ -3,14 +3,18 @@ from django.conf import settings
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 
+
 class BaseModel(models.Model):
+    """공통 추상 모델"""
     is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)  # 생성 시간 추가
 
     class Meta:
         abstract = True
 
 
 class Division(BaseModel):
+    """디비전 모델"""
     name = models.CharField(
         max_length=3,
         unique=True,
@@ -26,8 +30,22 @@ class Division(BaseModel):
     def __str__(self):
         return self.full_name
 
+    @classmethod
+    def create_default_divisions(cls):
+        """기본 디비전 생성"""
+        default_divisions = [
+            {"name": "LA", "full_name": "Los Angeles"},
+            {"name": "HOU", "full_name": "Houston"},
+            {"name": "PHX", "full_name": "Phoenix"},
+            {"name": "SAV", "full_name": "Savannah"},
+            {"name": "MOB", "full_name": "Mobile"},
+        ]
+        for division in default_divisions:
+            cls.objects.get_or_create(name=division["name"], defaults=division)
+
 
 class Yard(BaseModel):
+    """야드 모델"""
     division = models.ForeignKey(Division, on_delete=models.CASCADE, related_name="yards")
     yard_id = models.CharField(
         max_length=5,
@@ -45,6 +63,7 @@ class Yard(BaseModel):
 
 
 class Site(BaseModel):
+    """사이트 모델"""
     EQUIPMENT_TYPE_CHOICES = [
         ('Truck', 'Truck'),
         ('Chassis', 'Chassis'),
@@ -66,24 +85,24 @@ class Site(BaseModel):
         return f"{self.yard.yard_id} - {self.equipment_type} Site"
 
     def clean(self):
-        # Capacity 검증: 실제 장비 수가 용량을 초과하지 않도록 확인
-        if self.equipment_type == 'Truck' and self.trucks.count() > self.capacity:
-            raise ValidationError("Truck count exceeds capacity.")
-        if self.equipment_type == 'Chassis' and self.chassis.count() > self.capacity:
-            raise ValidationError("Chassis count exceeds capacity.")
-        if self.equipment_type == 'Container' and self.containers.count() > self.capacity:
-            raise ValidationError("Container count exceeds capacity.")
-        if self.equipment_type == 'Trailer' and self.trailers.count() > self.capacity:
-            raise ValidationError("Trailer count exceeds capacity.")
+        """장비 수용량 검증"""
+        related_equipment = getattr(self, f"{self.equipment_type.lower()}s", None)
+        if related_equipment and related_equipment.count() > self.capacity:
+            raise ValidationError(f"{self.equipment_type} count exceeds capacity.")
 
     def save(self, *args, **kwargs):
-        # 자동 용량 설정
+        """자동 용량 설정"""
         self.capacity = self.CAPACITY_MAPPING.get(self.equipment_type, self.capacity)
         super().save(*args, **kwargs)
 
 
 class Driver(BaseModel):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    """드라이버 모델"""
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        limit_choices_to={"user_type": "staff"}
+    )
     driver_id = models.CharField(
         max_length=8,
         unique=True,
@@ -100,6 +119,7 @@ class Driver(BaseModel):
 
 
 class Truck(BaseModel):
+    """트럭 모델"""
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name="trucks")
     truck_id = models.CharField(
         max_length=4,
@@ -111,12 +131,15 @@ class Truck(BaseModel):
             )
         ]
     )
+    serial_number = models.CharField(max_length=15, unique=True)
+    image = models.ImageField(upload_to='truck_images/', blank=True, null=True)  # 이미지 필드 추가
 
     def __str__(self):
         return self.truck_id
 
 
 class Chassis(BaseModel):
+    """샤시 모델"""
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name="chassis")
     chassis_id = models.CharField(
         max_length=4,
@@ -132,12 +155,15 @@ class Chassis(BaseModel):
         ('Regular', 'Regular'), ('Light', 'Light'),
         ('Tandem', 'Tandem'), ('Tri Axle', 'Tri Axle')
     ])
+    serial_number = models.CharField(max_length=15, unique=True)
+    image = models.ImageField(upload_to='chassis_images/', blank=True, null=True)  # 이미지 필드 추가
 
     def __str__(self):
         return self.chassis_id
 
 
 class Container(BaseModel):
+    """컨테이너 모델"""
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name="containers")
     container_id = models.CharField(
         max_length=11,
@@ -158,12 +184,15 @@ class Container(BaseModel):
         ('Flat Rack', 'Flat Rack'), ('ISO Tank', 'ISO Tank'),
         ('Open Top', 'Open Top'), ('Try Door', 'Try Door')
     ])
+    serial_number = models.CharField(max_length=15, unique=True)
+    image = models.ImageField(upload_to='container_images/', blank=True, null=True)  # 이미지 필드 추가
 
     def __str__(self):
         return self.container_id
 
 
 class Trailer(BaseModel):
+    """트레일러 모델"""
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name="trailers")
     trailer_id = models.CharField(
         max_length=10,
@@ -178,6 +207,8 @@ class Trailer(BaseModel):
     size = models.CharField(max_length=4, choices=[
         ('53', '53'), ('48', '48')
     ])
+    serial_number = models.CharField(max_length=15, unique=True)
+    image = models.ImageField(upload_to='trailer_images/', blank=True, null=True)  # 이미지 필드 추가
 
     def __str__(self):
         return self.trailer_id

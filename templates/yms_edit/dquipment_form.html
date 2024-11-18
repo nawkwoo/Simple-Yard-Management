@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ model_name }} 추가</title>
+</head>
+<body>
+    <h1>{{ model_name }} 추가</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">저장</button>
+    </form>
+    <a href="{% url 'yms_edit:equipment-list' %}">목록으로 돌아가기</a>
+</body>
+</html>
