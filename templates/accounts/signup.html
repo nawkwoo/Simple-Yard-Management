@@ -134,37 +134,38 @@
     <div class="container">
         <div class="logo-text">Yard Management System</div>
         <h1>회원가입</h1>
-        <form method="post" action="">
+        <form method="post" action="{% url 'accounts:signup' %}">
+            {% csrf_token %}
             <label for="user_type">회원 유형</label>
             <select name="user_type" id="user_type" required>
                 <option value="admin">관리자</option>
                 <option value="staff">직원</option>
             </select>
-
+        
             <label for="username">사용자 이름</label>
             <input type="text" id="username" name="username" required placeholder="사용자 이름을 입력하세요">
-
-            <label for="password">비밀번호</label>
-            <input type="password" id="password" name="password" required placeholder="비밀번호를 입력하세요">
-
-            <label for="password_confirm">비밀번호 확인</label>
-            <input type="password" id="password_confirm" name="password_confirm" required placeholder="비밀번호를 다시 입력하세요">
-
+        
+            <label for="password1">비밀번호</label>
+            <input type="password" id="password1" name="password1" required placeholder="비밀번호를 입력하세요">
+        
+            <label for="password2">비밀번호 확인</label>
+            <input type="password" id="password2" name="password2" required placeholder="비밀번호를 다시 입력하세요">
+        
             <label for="gender">성별</label>
             <select name="gender" id="gender" required>
-                <option value="male">남성</option>
-                <option value="female">여성</option>
+                <option value="M">남성</option>
+                <option value="F">여성</option>
             </select>
-
+        
             <label for="birth_date">생년월일</label>
-            <input type="date" id="birth_date" name="birth_date" required min="1924-01-01" max="2005-12-31">
-
+            <input type="date" id="birth_date" name="birth_date" required min="1950-01-01" max="2005-12-31">
+        
             <label>자가용 보유 여부</label>
             <div class="radio-group">
-                <label><input type="radio" name="has_car" value="yes" required> 예</label>
-                <label><input type="radio" name="has_car" value="no" required> 아니오</label>
+                <label><input type="radio" name="has_car" value="True" required> 예</label>
+                <label><input type="radio" name="has_car" value="False" required> 아니오</label>
             </div>
-
+        
             <button type="submit">회원가입</button>
         </form>
 
