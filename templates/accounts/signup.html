@@ -2,29 +2,162 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>회원가입</title>
+    <style>
+        /* 전체 페이지 배경 설정 */
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #e0e7ff, #f8fafc);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* 컨테이너 스타일 */
+        .container {
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.7); /* 투명도 조절 */
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 360px;
+            margin: auto;
+            position: relative;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* 제목과 설명 스타일 */
+        h1 {
+            font-size: 1.4rem;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            font-size: 0.8rem;
+            color: #555;
+            margin-bottom: 1rem;
+        }
+
+        /* 폼 요소 스타일 */
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 0.3rem;
+            font-size: 0.85rem;
+        }
+
+        select, input[type="text"], input[type="password"], input[type="date"] {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 0.8rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            box-sizing: border-box;
+        }
+
+        /* 라디오 버튼 스타일 */
+        .radio-group {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+        }
+
+        .radio-group label {
+            font-weight: normal;
+            font-size: 0.85rem;
+        }
+
+        /* 버튼 스타일 */
+        button {
+            width: 100%;
+            background: #4f46e5;
+            color: white;
+            font-size: 0.95rem;
+            font-weight: bold;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #4338ca;
+        }
+
+        /* 로그인 링크 스타일 */
+        a {
+            color: #4f46e5;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <h1>회원가입</h1>
-    <form method="post" action="{% url 'accounts:signup' %}">
-        {% csrf_token %}
-        
-        <!-- 사용자 유형 선택 -->
-        <label for="user_type">회원 유형:</label>
-        <select name="user_type" id="user_type" required>
-            <option value="admin">관리자</option>
-            <option value="staff">직원</option>
-        </select>
-        <br><br>
+    <div class="container">
+        <h1>회원가입</h1>
+        <p>OES 관리 시스템에 오신 것을 환영합니다</p>
+        <form method="post" action="{% url 'accounts:signup' %}">
+            {% csrf_token %}
+            
+            <!-- 사용자 유형 선택 -->
+            <label for="user_type">회원 유형</label>
+            <select name="user_type" id="user_type" required>
+                <option value="admin">관리자</option>
+                <option value="staff">직원</option>
+            </select>
 
-        <!-- 사용자 정보 입력 -->
-        {{ form.as_p }}
-        
-        <!-- 제출 버튼 -->
-        <button type="submit">회원가입</button>
-    </form>
+            <!-- 사용자 이름 -->
+            <label for="username">사용자 이름</label>
+            <input type="text" id="username" name="username" maxlength="150" required placeholder="사용자 이름을 입력하세요">
 
-    <!-- 로그인 페이지로 이동 -->
-    <p>이미 계정이 있으신가요? <a href="{% url 'accounts:login' %}">로그인</a></p>
+            <!-- 비밀번호 -->
+            <label for="password">비밀번호</label>
+            <input type="password" id="password" name="password" minlength="8" required placeholder="비밀번호를 입력하세요">
+
+            <!-- 비밀번호 확인 -->
+            <label for="password_confirm">비밀번호 확인</label>
+            <input type="password" id="password_confirm" name="password_confirm" required placeholder="비밀번호를 다시 입력하세요">
+
+            <!-- 성별 -->
+            <label for="gender">성별</label>
+            <select name="gender" id="gender" required>
+                <option value="male">남성</option>
+                <option value="female">여성</option>
+            </select>
+
+            <!-- 생년월일 -->
+            <label for="birth_date">Birth Date</label>
+            <input type="date" id="birth_date" name="birth_date" required min="1924-01-01" max="2005-12-31">
+
+            <!-- 자가용 보유 여부 -->
+            <label>Has car?</label>
+            <div class="radio-group">
+                <label>
+                    <input type="radio" name="has_car" value="yes" required> Yes
+                </label>
+                <label>
+                    <input type="radio" name="has_car" value="no" required> No
+                </label>
+            </div>
+
+            <!-- 제출 버튼 -->
+            <button type="submit">회원가입</button>
+        </form>
+
+        <!-- 로그인 페이지로 이동 -->
+        <p>이미 계정이 있으신가요? <a href="{% url 'accounts:login' %}">로그인</a></p>
+    </div>
 </body>
 </html>
