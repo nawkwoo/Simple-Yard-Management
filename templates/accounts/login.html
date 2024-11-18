@@ -8,19 +8,20 @@
         /* 전체 페이지 배경 설정 */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: rgb(86, 91, 97);
+            background: url('/static/images/background.gif') no-repeat center center fixed;
+            background-size: cover;
             margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             color: #333;
         }
 
         /* 컨테이너 스타일 */
         .container {
             text-align: center;
-            background: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 255, 255, 0.5);
             padding: 2rem 2.5rem;
             border-radius: 10px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
