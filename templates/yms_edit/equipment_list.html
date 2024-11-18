@@ -3,22 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>장비 목록</title>
+    <title>이큅먼트 및 야드 리스트</title>
 </head>
 <body>
-    <h1>장비 목록</h1>
+    <h1>장비 및 야드 리스트</h1>
+
+    <!-- 야드 리스트 -->
+    <h2>야드 리스트</h2>
     <ul>
-        {% for equipment in equipments %}
+        {% for yard in yards %}
+            <li>{{ yard.division.name }} - {{ yard.yard_id }} ({{ yard.is_active|yesno:"활성화,비활성화" }})</li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'yms_edit:yard-add' %}">야드 추가</a>
+
+    <!-- 장비 리스트 -->
+    <h2>장비 리스트</h2>
+    <ul>
+        {% for truck in trucks %}
             <li>
-                <a href="{% url 'yms_edit:equipment-detail' model=equipment._meta.model_name pk=equipment.pk %}">
-                    {{ equipment.serial_number }} - {{ equipment }}
+                <a href="{% url 'yms_edit:equipment-detail' model='truck' pk=truck.pk %}">
+                    트럭: {{ truck.truck_id }} - {{ truck.serial_number }}
+                </a>
+            </li>
+        {% endfor %}
+        {% for chassis in chassis %}
+            <li>
+                <a href="{% url 'yms_edit:equipment-detail' model='chassis' pk=chassis.pk %}">
+                    샤시: {{ chassis.chassis_id }} - {{ chassis.serial_number }}
+                </a>
+            </li>
+        {% endfor %}
+        {% for container in containers %}
+            <li>
+                <a href="{% url 'yms_edit:equipment-detail' model='container' pk=container.pk %}">
+                    컨테이너: {{ container.container_id }} - {{ container.serial_number }}
+                </a>
+            </li>
+        {% endfor %}
+        {% for trailer in trailers %}
+            <li>
+                <a href="{% url 'yms_edit:equipment-detail' model='trailer' pk=trailer.pk %}">
+                    트레일러: {{ trailer.trailer_id }} - {{ trailer.serial_number }}
                 </a>
             </li>
         {% endfor %}
     </ul>
-    <a href="{% url 'yms_edit:equipment-add' model='truck' %}">트럭 추가</a> |
-    <a href="{% url 'yms_edit:equipment-add' model='chassis' %}">샤시 추가</a> |
-    <a href="{% url 'yms_edit:equipment-add' model='container' %}">컨테이너 추가</a> |
-    <a href="{% url 'yms_edit:equipment-add' model='trailer' %}">트레일러 추가</a>
+
+    <!-- 장비 추가 버튼 -->
+    <h2>장비 추가</h2>
+    <div>
+        <a href="{% url 'yms_edit:equipment-add' model='truck' %}">트럭 추가</a> |
+        <a href="{% url 'yms_edit:equipment-add' model='chassis' %}">샤시 추가</a> |
+        <a href="{% url 'yms_edit:equipment-add' model='container' %}">컨테이너 추가</a> |
+        <a href="{% url 'yms_edit:equipment-add' model='trailer' %}">트레일러 추가</a>
+    </div>
 </body>
 </html>

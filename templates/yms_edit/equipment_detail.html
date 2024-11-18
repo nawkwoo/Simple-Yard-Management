@@ -6,17 +6,16 @@
     <title>장비 상세</title>
 </head>
 <body>
-    <h1>{{ equipment.serial_number }} - {{ equipment }}</h1>
-    <p><strong>장비 타입:</strong> {{ equipment._meta.model_name }}</p>
-    <p><strong>소속 사이트:</strong> {{ equipment.site }}</p>
-    <p><strong>생성 시간:</strong> {{ equipment.created_at }}</p>
-
+    <h1>장비 상세</h1>
+    <p>장비 유형: {{ equipment.__class__.__name__ }}</p>
+    <p>시리얼 번호: {{ equipment.serial_number }}</p>
+    <p>이미지:</p>
     {% if equipment.image %}
-        <img src="{{ equipment.image.url }}" alt="장비 이미지" style="max-width: 300px;">
+        <img src="{{ equipment.image.url }}" alt="{{ equipment.serial_number }}" style="max-width: 300px;">
     {% else %}
         <p>이미지가 없습니다.</p>
     {% endif %}
-
+    <p>상태: {{ equipment.is_active|yesno:"활성화됨,비활성화됨" }}</p>
     <a href="{% url 'yms_edit:equipment-list' %}">목록으로 돌아가기</a>
 </body>
 </html>

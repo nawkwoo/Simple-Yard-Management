@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>야드 추가</title>
+</head>
+<body>
+    <h1>야드 추가</h1>
+    <form method="post" action="{% url 'edit:yard-add' %}">
+        {% csrf_token %}
+        <p>
+            {{ form.division.label_tag }}<br>
+            {{ form.division }}
+        </p>
+        <p>
+            {{ form.yard_id.label_tag }}<br>
+            {{ form.yard_id }}
+        </p>
+        <p>
+            {{ form.equipment_types.label_tag }}<br>
+            <ul>
+                {% for choice in form.equipment_types %}
+                    <li>{{ choice.tag }} {{ choice.choice_label }}</li>
+                {% endfor %}
+            </ul>
+        </p>
+        <p>
+            {{ form.is_active.label_tag }}<br>
+            {{ form.is_active }}
+        </p>
+        <button type="submit">야드 생성</button>
+    </form>
+    <a href="{% url 'yms_edit:equipment-list' %}">뒤로 가기</a>
+</body>
+</html>
