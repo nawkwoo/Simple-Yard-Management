@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Home</title>
+</head>
+<body>
+    <h1>Dashboard Home</h1>
+    <div>
+        {% if edit_url %}
+            <a href="{{ edit_url }}">장비 수정</a>
+        {% endif %}
+        
+        <a href="{{ manage_url }}">장비 관리</a>
+        
+        {% if order_url %}
+            <a href="{{ order_url }}">주문 입력</a>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -19,7 +19,9 @@ from django.urls import path, include
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", include(("apps.accounts.urls", "accounts"), namespace="accounts")),
-    # path("yms/", include(("apps.yms.urls", "yms"), namespace="yms")),
-    # path("history/", include(("apps.history.urls", "history"), namespace="history")),
+    path("accounts/", include(("apps.accounts.urls", "accounts"), namespace="accounts")),
+    path("", include(("apps.dashboard.urls", "dashboard"), namespace="dashborad")),
+    path("edit/", include(("apps.yms_edit.urls", "yms_edit"), namespace="edit")),
+    path("view", include(("apps.yms_view.urls", "yms_view"), namespace="view")),
+    path("mypage/", include(("apps.mypage.urls", "mypage"), namespace="mypage")),
 ]

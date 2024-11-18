@@ -1,30 +1,23 @@
-# apps/accounts/views.py
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.forms import UserCreationForm
+from .forms import AdminSignUpForm, StaffSignUpForm
 from django.contrib import messages
-from django.http import HttpResponse
-
-def index(request):
-    return HttpResponse("Welcome to the 어우송 YMS App")
-
-def start(request):
-    return HttpResponse("This is the start page.")
 
 def signup(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        user_type = request.POST.get('user_type')  # Admin or Employee 선택
-
+        user_type = request.POST.get('user_type', 'admin')
+        form_class = AdminSignUpForm if user_type == 'admin' else StaffSignUpForm
+        form = form_class(request.POST)
+        
         if form.is_valid():
-            user = form.save()
-            user.profile.user_type = user_type  # Profile에 user_type 저장
-            user.profile.save()
-            login(request, user)
-            messages.success(request, f'Account created for {user.username} as {user_type}')
-            return redirect('accouns:index')
+            user = form.save(commit=False)
+            user.user_type = user_type
+            user.save()
+            messages.success(request, "회원가입이 완료되었습니다. 로그인 창으로 이동합니다.")
+            return redirect('accounts:login')
     else:
-        form = UserCreationForm()
+        form = AdminSignUpForm()
+
     return render(request, 'accounts/signup.html', {'form': form})
 
 def login_view(request):
@@ -35,16 +28,14 @@ def login_view(request):
         
         if user is not None:
             login(request, user)
-            if user.profile.user_type == 'admin':
-                messages.success(request, 'Logged in as Admin')
-            else:
-                messages.success(request, 'Logged in as Employee')
-            return redirect('accounts:index')
+            messages.success(request, "로그인에 성공했습니다.")
+            return redirect('dashboard:home')
         else:
-            messages.error(request, 'Invalid username or password')
+            messages.error(request, '로그인에 실패하였습니다. 다시 시도해주세요.')
+    
     return render(request, 'accounts/login.html')
 
 def logout_view(request):
     logout(request)
-    messages.success(request, 'Logged out successfully')
-    return redirect('accounts:index')
+    messages.success(request, '로그아웃 되었습니다.')
+    return redirect('dashboard:index')

@@ -1,15 +1,18 @@
-# apps/accounts/models.py
+from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.contrib.auth.models import User
 
-class Profile(models.Model):
+class CustomUser(AbstractUser):
     USER_TYPE_CHOICES = (
-        ('admin', 'Admin'),
-        ('employee', 'Employee'),
+        ('admin', '관리자'),
+        ('staff', '직원'),
     )
-
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
     user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES)
+    gender = models.CharField(max_length=10, choices=[('M', '남성'), ('F', '여성')])
+    birth_date = models.DateField(null=True, blank=True)
+    has_car = models.BooleanField(default=False)
 
-    def __str__(self):
-        return f"{self.user.username} ({self.user_type})"
+    def is_admin(self):
+        return self.user_type == 'admin'
+
+    def is_staff(self):
+        return self.user_type == 'staff'
