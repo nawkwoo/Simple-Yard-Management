@@ -6,20 +6,16 @@ from io import TextIOWrapper
 from django.contrib.auth.decorators import login_required
 
 def index(request):
-    return render(request, 'dashboard/index.html')
+    return render(request, 'accounts/login.html')
 
+@login_required
 @login_required
 def home(request):
     context = {
-        'manage_url': reverse('yms_view:view_page'),
+        'edit_url': reverse('edit:equipment-list'),
+        'manage_url': reverse('view:view_page'),
+        'order_url': reverse('dashboard:order'),
     }
-    
-    if request.user.is_admin():
-        context.update({
-            'edit_url': reverse('edit:edit_view'),
-            'order_url': reverse('dashboard:order')
-        })
-
     return render(request, 'dashboard/home.html', context)
 
 @login_required

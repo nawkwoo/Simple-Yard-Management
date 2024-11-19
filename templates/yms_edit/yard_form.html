@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if view.object %}야드 수정{% else %}야드 추가{% endif %}</title>
+</head>
+<body>
+    <h1>{% if view.object %}야드 수정{% else %}야드 추가{% endif %}</h1>
+    <form method="post" action="">
+        {% csrf_token %}
+        <p>
+            {{ form.division.label_tag }}<br>
+            {{ form.division }}
+            {% if form.division.errors %}
+                <ul class="errorlist">
+                    {% for error in form.division.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </p>
+        <p>
+            {{ form.yard_id.label_tag }}<br>
+            {{ form.yard_id }}
+            {% if form.yard_id.errors %}
+                <ul class="errorlist">
+                    {% for error in form.yard_id.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </p>
+        <p>
+            {{ form.equipment_types.label_tag }}<br>
+            <ul>
+                {% for choice in form.equipment_types %}
+                    <li>{{ choice.tag }} {{ choice.choice_label }}</li>
+                {% endfor %}
+            </ul>
+            {% if form.equipment_types.errors %}
+                <ul class="errorlist">
+                    {% for error in form.equipment_types.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </p>
+        <p>
+            {{ form.is_active.label_tag }}<br>
+            {{ form.is_active }}
+            {% if form.is_active.errors %}
+                <ul class="errorlist">
+                    {% for error in form.is_active.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </p>
+        <button type="submit">
+            {% if view.object %}야드 수정{% else %}야드 생성{% endif %}
+        </button>
+    </form>
+    <a href="{% url 'yms_edit:equipment-list' %}">뒤로 가기</a>
+</body>
+</html>

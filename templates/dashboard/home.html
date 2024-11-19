@@ -1,139 +1,113 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YMS Dashboard</title>
-    {% load static %}
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Home</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #e0e7ff, #f8fafc);
             margin: 0;
+            padding: 0;
             min-height: 100vh;
-        }
-
-        /* 네비게이션 바 스타일 */
-        .navbar {
-            background: white;
-            padding: 1rem 2rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .main-icon {
-            font-size: 1.5rem;
-            color: #4f46e5;
-        }
-
-        .user-section {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-type {
-            background: #4f46e5;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-        }
-
-        .logout-btn {
-            color: #666;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        /* 대시보드 컨텐츠 스타일 */
-        .dashboard-container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-
-        .welcome-section {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            margin-bottom: 2rem;
-        }
-
-        .menu-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .menu-card {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            text-align: center;
-            transition: transform 0.3s ease;
-        }
-
-        .menu-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .menu-card i {
-            font-size: 2rem;
-            color: #4f46e5;
-            margin-bottom: 1rem;
-        }
-
-        .menu-card h3 {
-            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            /* background: url("{% static 'images/background(reverse).gif' %}") no-repeat center center fixed; */
+            background-size: cover;
             color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+            background: rgba(86, 91, 97, 0.5);
+        }
+
+        .section {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+            text-decoration: none;
+        }
+
+        .vertical-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .line-1 {
+            left: 33.33%;
+        }
+
+        .line-2 {
+            right: 33.33%;
+        }
+
+        .section h2 {
+            color: white;
+            font-size: 2.5rem;
+            margin-top: 3rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .section span {
+            color: rgba(255, 255, 255, 0.7);
             font-size: 1.2rem;
-            margin-bottom: 0.5rem;
+            margin-top: 0.5rem;
         }
 
-        .menu-card p {
-            color: #666;
-            font-size: 0.9rem;
-            margin: 0;
+        .section-edit {
+            background: rgba(65, 70, 75, 0.5);
         }
 
-        .menu-link {
+        .section-view {
+            background: rgba(75, 80, 85, 0.5);
+        }
+
+        .section-order {
+            background: rgba(85, 90, 95, 0.5);
+        }
+
+        .logo {
+            position: absolute;
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 2;
+        }
+
+        .section:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .section a {
             text-decoration: none;
             color: inherit;
+            text-align: center;
         }
 
-        /* 반응형 디자인 */
-        @media (max-width: 768px) {
-            .navbar {
-                flex-direction: column;
-                text-align: center;
-                padding: 1rem;
-            }
-
-            .user-section {
-                margin-top: 1rem;
-            }
-
-            .menu-grid {
-                grid-template-columns: 1fr;
-            }
+        .section a:hover h2, .section a:hover span {
+            color: rgba(255, 255, 255, 1);
         }
     </style>
 </head>
 <body>
+<<<<<<< HEAD
     <!-- 네비게이션 바 -->
     <nav class="navbar">
         <div class="logo-section">
@@ -187,6 +161,32 @@
                 </div>
             </a>
             {% endif %}
+=======
+    <div class="logo">Yard Management System</div>
+    <div class="container">
+        <div class="vertical-line line-1"></div>
+        <div class="vertical-line line-2"></div>
+
+        <div class="section section-edit">
+            <a href="{{ edit_url }}">
+                <h2>관리</h2>
+                <span>(Edit)</span>
+            </a>
+        </div>
+
+        <div class="section section-view">
+            <a href="{{ manage_url }}">
+                <h2>뷰</h2>
+                <span>(View)</span>
+            </a>
+        </div>
+
+        <div class="section section-order">
+            <a href="{{ order_url }}">
+                <h2>주문</h2>
+                <span>(Order)</span>
+            </a>
+>>>>>>> 4076a5978d4510857de73ec33cd27c0baeed2292
         </div>
     </div>
 </body>

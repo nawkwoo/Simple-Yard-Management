@@ -13,7 +13,7 @@ def edit_profile(request):
         form = ProfileEditForm(request.POST, instance=request.user)
         if form.is_valid():
             form.save()
-            messages.success(request, '프로필이 성공적으로 수정되었습니다.')
+            messages.success(request, "프로필이 성공적으로 수정되었습니다.")
             return redirect('mypage:profile')
     else:
         form = ProfileEditForm(instance=request.user)
