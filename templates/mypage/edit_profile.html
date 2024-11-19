@@ -1,13 +1,166 @@
-{% extends 'dashboard/base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로필 수정</title>
+    <style>
+        /* 동일한 스타일을 사용 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: url('/static/images/background.gif') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
 
-{% block title %}Edit Profile{% endblock %}
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 1.5rem 2rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 360px;
+            backdrop-filter: blur(8px);
+        }
 
-{% block content %}
-    <h1>Edit Profile</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Save Changes</button>
-    </form>
-    <a href="{% url 'mypage:profile' %}">Back to Profile</a>
-{% endblock %}
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: rgb(64, 68, 73);
+            margin-bottom: 1rem;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            color: rgb(64, 68, 73);
+            margin: 0 0 1rem 0;
+            font-weight: 600;
+        }
+
+        p {
+            font-size: 0.85rem;
+            color: rgb(100, 105, 112);
+            margin: 0.5rem 0;
+        }
+
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.25rem;
+            text-align: left;
+            font-size: 0.85rem;
+            color: rgb(86, 91, 97);
+        }
+
+        input[type="text"], input[type="password"], input[type="date"], select {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 0.75rem;
+            border: 2px solid rgba(86, 91, 97, 0.2);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus, 
+        input[type="date"]:focus, select:focus {
+            outline: none;
+            border-color: rgb(86, 91, 97);
+            box-shadow: 0 0 0 3px rgba(86, 91, 97, 0.1);
+            background: rgba(255, 255, 255, 1);
+        }
+
+        .radio-group {
+            display: flex;
+            justify-content: flex-start;
+            gap: 2rem;
+            margin-bottom: 0.75rem;
+            text-align: left;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-weight: normal;
+            margin: 0;
+        }
+
+        button {
+            width: 100%;
+            background: rgb(86, 91, 97);
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 0.5rem;
+        }
+
+        button:hover {
+            background: rgb(71, 75, 80);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        a {
+            color: rgb(86, 91, 97);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .divider {
+            height: 1px;
+            background: rgba(86, 91, 97, 0.1);
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-text">Yard Management System</div>
+        <h1>프로필 수정</h1>
+        <form method="post" action="">
+            {% csrf_token %}
+
+            <label for="username">사용자 이름</label>
+            <input type="text" id="username" name="username" required value="{{ user.username }}">
+
+            <label for="gender">성별</label>
+            <select name="gender" id="gender" required>
+                <option value="M" {% if user.gender == 'M' %}selected{% endif %}>남성</option>
+                <option value="F" {% if user.gender == 'F' %}selected{% endif %}>여성</option>
+            </select>
+
+            <label for="birth_date">생년월일</label>
+            <input type="date" id="birth_date" name="birth_date" required min="1924-01-01" max="2005-12-31" value="{{ user.birth_date|date:'Y-m-d' }}">
+
+            <label>자가용 보유 여부</label>
+            <div class="radio-group">
+                <label><input type="radio" name="has_car" value="True" {% if user.has_car %}checked{% endif %}> 예</label>
+                <label><input type="radio" name="has_car" value="False" {% if not user.has_car %}checked{% endif %}> 아니오</label>
+            </div>
+
+            <button type="submit">저장하기</button>
+        </form>
+
+        <div class="divider"></div>
+        <p><a href="{% url 'mypage:profile' %}">돌아가기</a></p>
+    </div>
+</body>
+</html>
