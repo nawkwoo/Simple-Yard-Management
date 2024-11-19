@@ -22,14 +22,13 @@ class YardCreateForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """기존 데이터 초기값 설정"""
-        if 'instance' in kwargs:
-            instance = kwargs['instance']
+        instance = kwargs.get('instance')  # 안전하게 instance를 가져옴
+        if instance:  # instance가 존재할 때만 처리
             kwargs['initial'] = kwargs.get('initial', {})
             kwargs['initial']['equipment_types'] = [
                 site.equipment_type for site in instance.sites.all()
             ]
         super().__init__(*args, **kwargs)
-
 
 # --- Truck Form ---
 class TruckForm(forms.ModelForm):

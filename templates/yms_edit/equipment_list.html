@@ -17,6 +17,19 @@
             background-color: #007BFF;
             color: white;
         }
+        .action-buttons a {
+            margin: 5px;
+            padding: 10px;
+            display: inline-block;
+            text-decoration: none;
+            border: 1px solid #28a745;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
+        }
+        .action-buttons a:hover {
+            background-color: #218838;
+        }
     </style>
 </head>
 <body>
@@ -41,20 +54,58 @@
         </div>
     </div>
 
-    <!-- 결과 영역 -->
+    <!-- 추가 버튼 영역 -->
+    <div class="action-buttons">
+        <h2>추가하기</h2>
+        <a href="{% url 'yms_edit:yard-add' %}">야드 추가</a>
+        <a href="{% url 'yms_edit:equipment-add' model='truck' %}">트럭 추가</a>
+        <a href="{% url 'yms_edit:equipment-add' model='chassis' %}">샤시 추가</a>
+        <a href="{% url 'yms_edit:equipment-add' model='container' %}">컨테이너 추가</a>
+        <a href="{% url 'yms_edit:equipment-add' model='trailer' %}">트레일러 추가</a>
+    </div>
+
+    <!-- 야드 리스트 -->
+    <h2>야드 리스트</h2>
+    <ul>
+        {% for yard in yards %}
+            <li>
+                <a href="{% url 'yms_edit:yard-detail' pk=yard.pk %}">
+                    {{ yard.division.name }} - {{ yard.yard_id }} ({{ yard.is_active|yesno:"활성화,비활성화" }})
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <!-- 장비 리스트 -->
     <h2>장비 리스트</h2>
     <ul>
         {% for truck in trucks %}
-            <li>트럭: {{ truck.truck_id }} - {{ truck.serial_number }}</li>
+            <li>
+                <a href="{% url 'yms_edit:equipment-detail' model='truck' pk=truck.pk %}">
+                    트럭: {{ truck.truck_id }} - {{ truck.serial_number }}
+                </a>
+            </li>
         {% endfor %}
         {% for chassis in chassis %}
-            <li>샤시: {{ chassis.chassis_id }} - {{ chassis.serial_number }}</li>
+            <li>
+                <a href="{% url 'yms_edit:equipment-detail' model='chassis' pk=chassis.pk %}">
+                    샤시: {{ chassis.chassis_id }} - {{ chassis.serial_number }}
+                </a>
+            </li>
         {% endfor %}
         {% for container in containers %}
-            <li>컨테이너: {{ container.container_id }} - {{ container.serial_number }}</li>
+            <li>
+                <a href="{% url 'yms_edit:equipment-detail' model='container' pk=container.pk %}">
+                    컨테이너: {{ container.container_id }} - {{ container.serial_number }}
+                </a>
+            </li>
         {% endfor %}
         {% for trailer in trailers %}
-            <li>트레일러: {{ trailer.trailer_id }} - {{ trailer.serial_number }}</li>
+            <li>
+                <a href="{% url 'yms_edit:equipment-detail' model='trailer' pk=trailer.pk %}">
+                    트레일러: {{ trailer.trailer_id }} - {{ trailer.serial_number }}
+                </a>
+            </li>
         {% endfor %}
     </ul>
 
