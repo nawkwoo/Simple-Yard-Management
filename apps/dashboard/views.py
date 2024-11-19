@@ -11,7 +11,7 @@ def index(request):
 @login_required
 def home(request):
     context = {
-        'manage_url': reverse('view:view_page'),
+        'manage_url': reverse('yms_view:view_page'),
     }
     
     if request.user.is_admin():
