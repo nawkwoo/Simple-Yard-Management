@@ -1,4 +1,6 @@
 from django.shortcuts import get_object_or_404
+from django.shortcuts import redirect
+from django.http import HttpResponse
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
@@ -157,7 +159,11 @@ class EquipmentCreateView(CreateView):
         if not form_class:
             raise Http404("잘못된 모델입니다.")
         return form_class
-
+    
+    def form_valid(self, form):
+        self.object = form.save()
+        return HttpResponse('<script>window.parent.location.reload(); window.parent.document.getElementById("modal").style.display = "none";</script>')
+    
     def form_valid(self, form):
         site = form.cleaned_data['site']
         model_name = self.kwargs.get('model').capitalize()
