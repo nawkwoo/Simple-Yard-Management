@@ -118,6 +118,8 @@ class YardDeleteView(DeleteView):
 
 
 # --- Equipment Views ---
+from apps.yms_view.models import Transaction  # 트랜잭션 모델 임포트
+
 class EquipmentDetailView(DetailView):
     """장비 상세 보기 뷰"""
     template_name = 'yms_edit/equipment_detail.html'
@@ -138,9 +140,13 @@ class EquipmentDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        equipment = self.get_object()
+
+        # 트랜잭션 필터링
+        transactions = Transaction.objects.filter(order__equipment=equipment)
+        context['transactions'] = transactions
         context['model_name'] = self.kwargs.get('model')
         return context
-
 
 class EquipmentCreateView(CreateView):
     """장비 추가 뷰"""

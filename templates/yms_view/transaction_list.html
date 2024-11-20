@@ -1,0 +1,73 @@
+{% block content %}
+<h1>트랜잭션 목록</h1>
+
+<!-- 필터 폼 -->
+<form method="get" class="mb-4">
+    <div>
+        <label for="yard">야드 선택:</label>
+        <select name="yard" id="yard" class="form-select">
+            <option value="">-- 모든 야드 --</option>
+            {% for yard in yards %}
+            <option value="{{ yard.id }}" {% if selected_yard == yard.id %}selected{% endif %}>
+                {{ yard.yard_id }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label for="start_date">시작일:</label>
+        <input type="date" name="start_date" id="start_date" value="{{ start_date }}" class="form-control">
+    </div>
+    <div>
+        <label for="end_date">종료일:</label>
+        <input type="date" name="end_date" id="end_date" value="{{ end_date }}" class="form-control">
+    </div>
+    <div>
+        <label for="serial_number">장비 시리얼 번호:</label>
+        <input type="text" name="serial_number" id="serial_number" placeholder="예: T1234" value="{{ serial_number }}" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">필터 적용</button>
+</form>
+
+<!-- 트랜잭션 목록 -->
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>장비</th>
+            <th>출발 야드</th>
+            <th>도착 야드</th>
+            <th>이동 시간</th>
+            <th>세부 정보</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for transaction in transactions %}
+        <tr>
+            <td>{{ transaction.equipment.serial_number }}</td>
+            <td>
+                {% if transaction.departure_yard %}
+                    {{ transaction.departure_yard.yard_id }}
+                {% else %}
+                    없음
+                {% endif %}
+            </td>
+            <td>
+                {% if transaction.arrival_yard %}
+                    {{ transaction.arrival_yard.yard_id }}
+                {% else %}
+                    없음
+                {% endif %}
+            </td>
+            <td>{{ transaction.movement_time }}</td>
+            <td>{{ transaction.details }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- 트랜잭션이 없을 경우 -->
+{% if transactions|length == 0 %}
+<p class="text-danger">선택된 조건에 해당하는 트랜잭션이 없습니다.</p>
+{% endif %}
+
+{% endblock %}
