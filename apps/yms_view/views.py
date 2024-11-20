@@ -4,9 +4,9 @@ from django.core.exceptions import ValidationError
 from django.views.generic import ListView
 from apps.dashboard.models import Order
 from apps.yms_view.models import Transaction
-from apps.yms_edit.models import Yard, YardInventory
+from apps.yms_edit.models import Yard, YardInventory, Truck, Chassis, Container, Trailer
 from datetime import datetime
-
+from apps.yms_edit.models import EquipmentBase, Truck, Chassis, Container, Trailer
 
 # --- 주문 처리 로직 ---
 def process_order(order_id):
@@ -70,7 +70,7 @@ def process_order(order_id):
 # --- 트랜잭션 리스트 뷰 ---
 class TransactionListView(ListView):
     """
-    트랜잭션 기록을 출력하는 뷰.
+    트랜잭션 기록 및 선택된 야드 장비 정보를 출력하는 뷰.
     """
     model = Transaction
     template_name = "yms_view/transaction_list.html"
@@ -79,18 +79,21 @@ class TransactionListView(ListView):
 
     def get_queryset(self):
         """
-        쿼리셋 필터링 로직.
+        트랜잭션 목록 필터링
         """
         queryset = super().get_queryset()
 
+        # 필터링 조건
         yard_id = self.request.GET.get('yard')  # 선택된 야드 ID
         start_date = self.request.GET.get('start_date')  # 시작일
         end_date = self.request.GET.get('end_date')  # 종료일
         serial_number = self.request.GET.get('serial_number')  # 장비 시리얼 번호
 
+        # 야드 필터링
         if yard_id:
             queryset = queryset.filter(Q(departure_yard__id=yard_id) | Q(arrival_yard__id=yard_id))
 
+        # 날짜 필터링
         if start_date:
             try:
                 start_date = datetime.strptime(start_date, '%Y-%m-%d')
@@ -105,19 +108,49 @@ class TransactionListView(ListView):
             except ValueError:
                 pass
 
+        # 장비 시리얼 번호 필터링
         if serial_number:
-            queryset = queryset.filter(equipment__serial_number__icontains=serial_number)
+            # 각 장비 모델에서 serial_number로 필터링
+            trucks = Truck.objects.filter(serial_number__icontains=serial_number).values_list('id', flat=True)
+            chassis = Chassis.objects.filter(serial_number__icontains=serial_number).values_list('id', flat=True)
+            containers = Container.objects.filter(serial_number__icontains=serial_number).values_list('id', flat=True)
+            trailers = Trailer.objects.filter(serial_number__icontains=serial_number).values_list('id', flat=True)
+
+            # 트랜잭션 필터링
+            queryset = queryset.filter(
+                object_id__in=list(trucks) + list(chassis) + list(containers) + list(trailers)
+            )
 
         return queryset
 
     def get_context_data(self, **kwargs):
         """
-        추가적인 컨텍스트 데이터.
+        추가적인 컨텍스트 데이터를 템플릿에 전달.
         """
         context = super().get_context_data(**kwargs)
+
+        # 기본 필터링 데이터
+        yard_id = self.request.GET.get('yard')
         context["yards"] = Yard.objects.all()
-        context["selected_yard"] = self.request.GET.get('yard')
+        context["selected_yard"] = yard_id
         context["start_date"] = self.request.GET.get('start_date')
         context["end_date"] = self.request.GET.get('end_date')
         context["serial_number"] = self.request.GET.get('serial_number')
+
+        # 선택된 야드의 장비 정보
+        if yard_id:
+            selected_yard = Yard.objects.filter(id=yard_id).first()
+            if selected_yard:
+                sites = Site.objects.filter(yard=selected_yard)
+
+                # 각 장비 유형별 수량 계산
+                inventory = {
+                    'Truck': Truck.objects.filter(site__in=sites).count(),
+                    'Chassis': Chassis.objects.filter(site__in=sites).count(),
+                    'Container': Container.objects.filter(site__in=sites).count(),
+                    'Trailer': Trailer.objects.filter(site__in=sites).count(),
+                }
+                context["selected_yard_inventory"] = inventory
+                context["selected_yard_name"] = selected_yard.yard_id
+
         return context

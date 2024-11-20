@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
+from django.contrib.contenttypes.fields import GenericRelation
 
 # --- 공통 추상 모델 ---
 class BaseModel(models.Model):
@@ -119,6 +120,7 @@ class EquipmentBase(BaseModel):
 
 class Truck(EquipmentBase):
     """트럭 모델"""
+    transactions = GenericRelation('yms_view.Transaction')
     truck_id = models.CharField(
         max_length=4,
         unique=True,
@@ -131,6 +133,7 @@ class Truck(EquipmentBase):
 
 class Chassis(EquipmentBase):
     """샤시 모델"""
+    transactions = GenericRelation('yms_view.Transaction')
     chassis_id = models.CharField(
         max_length=4,
         unique=True,
@@ -147,6 +150,7 @@ class Chassis(EquipmentBase):
 
 class Container(EquipmentBase):
     """컨테이너 모델"""
+    transactions = GenericRelation('yms_view.Transaction')
     container_id = models.CharField(
         max_length=11,
         unique=True,
@@ -167,6 +171,7 @@ class Container(EquipmentBase):
 
 class Trailer(EquipmentBase):
     """트레일러 모델"""
+    transactions = GenericRelation('yms_view.Transaction')
     trailer_id = models.CharField(
         max_length=10,
         unique=True,
