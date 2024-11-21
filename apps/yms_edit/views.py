@@ -126,6 +126,7 @@ class EquipmentDetailView(DetailView):
     context_object_name = 'equipment'
 
     def get_object(self):
+        """모델에 따라 장비 객체를 가져옵니다."""
         model = self.kwargs.get('model')
         pk = self.kwargs.get('pk')
         model_class = {
@@ -139,11 +140,14 @@ class EquipmentDetailView(DetailView):
         return get_object_or_404(model_class, pk=pk)
 
     def get_context_data(self, **kwargs):
+        """추가 데이터를 컨텍스트에 전달"""
         context = super().get_context_data(**kwargs)
         equipment = self.get_object()
 
-        # 트랜잭션 필터링
-        transactions = Transaction.objects.filter(order__equipment=equipment)
+        # 트랜잭션 필터링: GenericRelation 사용
+        transactions = equipment.transactions.all()
+
+        # 컨텍스트 업데이트
         context['transactions'] = transactions
         context['model_name'] = self.kwargs.get('model')
         return context
@@ -165,17 +169,25 @@ class EquipmentCreateView(CreateView):
         return form_class
 
     def form_valid(self, form):
+        """사이트 용량 확인 및 검증"""
         site = form.cleaned_data['site']
         model_name = self.kwargs.get('model').capitalize()
+
+        # 현재 사이트의 장비 수 확인
+        current_count = site.equipmentbase_set.count()
+        if current_count >= site.capacity:
+            form.add_error('site', f"선택한 사이트는 최대 용량({site.capacity})을 초과했습니다.")
+            return self.form_invalid(form)
+
         if site.equipment_type != model_name:
             form.add_error('site', f"선택한 사이트는 {model_name} 장비를 지원하지 않습니다.")
             return self.form_invalid(form)
+
         messages.success(self.request, f"{model_name} 장비가 성공적으로 추가되었습니다.")
         return super().form_valid(form)
 
     def get_success_url(self):
         return reverse_lazy('yms_edit:equipment-list')
-
 
 class EquipmentUpdateView(UpdateView):
     """장비 수정 뷰"""

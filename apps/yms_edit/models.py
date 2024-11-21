@@ -100,7 +100,14 @@ class Site(BaseModel):
         if not self.capacity:
             self.capacity = self.CAPACITY_MAPPING.get(self.equipment_type, 30)
         super().save(*args, **kwargs)
-
+    
+    def is_full(self):
+        """사이트가 최대 수용량에 도달했는지 확인"""
+        current_count = Truck.objects.filter(site=self).count() + \
+                        Chassis.objects.filter(site=self).count() + \
+                        Container.objects.filter(site=self).count() + \
+                        Trailer.objects.filter(site=self).count()
+        return current_count >= self.capacity
 
 # --- Equipment Models ---
 class EquipmentBase(BaseModel):
@@ -203,5 +210,9 @@ class Driver(models.Model):
         )]
     )
 
+    @property
+    def has_personal_vehicle(self):
+        return self.user.has_car
+    
     def __str__(self):
         return f"{self.driver_id} - {self.user.username}"

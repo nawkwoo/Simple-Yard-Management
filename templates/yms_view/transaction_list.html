@@ -1,6 +1,45 @@
 {% block content %}
 <h1>트랜잭션 목록</h1>
 
+<!-- 선택된 야드의 장비 상태 -->
+<h2>현재 선택된 야드: {{ selected_yard_name }}</h2>
+<div class="equipment-status">
+    {% for status in inventory_status %}
+    <div class="equipment-section">
+        <h3>{{ status.equipment_type }}</h3>
+        <div class="capacity-bar">
+            {% for i in status.capacity_range %}
+            <div class="capacity-block {% if i < status.current_count %}filled{% else %}empty{% endif %}"></div>
+            {% endfor %}
+        </div>
+        <p>{{ status.current_count }} / {{ status.capacity }}</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- CSS -->
+<style>
+    .capacity-bar {
+        display: flex;
+        gap: 2px;
+        margin: 10px 0;
+    }
+    .capacity-block {
+        width: 20px;
+        height: 20px;
+        border: 1px solid #ccc;
+    }
+    .capacity-block.filled {
+        background-color: green;
+    }
+    .capacity-block.empty {
+        background-color: #f0f0f0;
+    }
+    .equipment-section {
+        margin-bottom: 20px;
+    }
+</style>
+
 <!-- 필터 폼 -->
 <form method="get" class="mb-4">
     <div>

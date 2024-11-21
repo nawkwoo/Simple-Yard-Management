@@ -32,8 +32,20 @@
             <tbody>
                 {% for transaction in transactions %}
                 <tr>
-                    <td>{{ transaction.departure_yard.yard_id if transaction.departure_yard else '없음' }}</td>
-                    <td>{{ transaction.arrival_yard.yard_id if transaction.arrival_yard else '없음' }}</td>
+                    <td>
+                        {% if transaction.departure_yard %}
+                            {{ transaction.departure_yard.yard_id }}
+                        {% else %}
+                            없음
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if transaction.arrival_yard %}
+                            {{ transaction.arrival_yard.yard_id }}
+                        {% else %}
+                            없음
+                        {% endif %}
+                    </td>
                     <td>{{ transaction.movement_time }}</td>
                     <td>{{ transaction.details }}</td>
                 </tr>
