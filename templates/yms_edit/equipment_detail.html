@@ -7,7 +7,7 @@
 </head>
 <body>
     <h1>장비 상세 정보</h1>
-    <p><strong>장비 타입:</strong> {{ equipment_type }}</p>
+    <p><strong>장비 타입:</strong> {{ model_name }}</p>
     <p><strong>시리얼 번호:</strong> {{ equipment.serial_number }}</p>
     <p><strong>활성 상태:</strong> {{ equipment.is_active|yesno:"활성화,비활성화" }}</p>
     <p><strong>관련 사이트:</strong> {{ equipment.site }}</p>
@@ -17,6 +17,45 @@
     {% else %}
         <p>이미지가 없습니다.</p>
     {% endif %}
+
+    <h2>장비 이동 기록</h2>
+    {% if transactions %}
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>출발 야드</th>
+                    <th>도착 야드</th>
+                    <th>이동 시간</th>
+                    <th>세부 정보</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in transactions %}
+                <tr>
+                    <td>
+                        {% if transaction.departure_yard %}
+                            {{ transaction.departure_yard.yard_id }}
+                        {% else %}
+                            없음
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if transaction.arrival_yard %}
+                            {{ transaction.arrival_yard.yard_id }}
+                        {% else %}
+                            없음
+                        {% endif %}
+                    </td>
+                    <td>{{ transaction.movement_time }}</td>
+                    <td>{{ transaction.details }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>관련 이동 기록이 없습니다.</p>
+    {% endif %}
+
     <a href="{% url 'yms_edit:equipment-edit' model=model_name pk=equipment.pk %}">수정하기</a>
     <a href="{% url 'yms_edit:equipment-delete' model=model_name pk=equipment.pk %}">삭제하기</a>
 

@@ -1,0 +1,63 @@
+{% comment %} {% extends 'base.html' %} {% endcomment %}
+
+{% block content %}
+<h1>주문 목록</h1>
+
+<!-- CSV 업로드 버튼 -->
+<a href="{% url 'dashboard:upload_csv' %}" class="btn btn-primary">CSV 업로드</a>
+
+<table class="table table-striped table-hover mt-3">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>트럭</th>
+            <th>샤시</th>
+            <th>컨테이너</th>
+            <th>트레일러</th>
+            <th>운전자</th>
+            <th>출발시간</th>
+            <th>도착시간</th>
+            <th>출발위치</th>
+            <th>도착위치</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in orders %}
+        <tr>
+            <td>{{ order.id }}</td>
+            <td>{{ order.truck }}</td>
+            <td>{{ order.chassis }}</td>
+            <td>{{ order.container }}</td>
+            <td>{{ order.trailer }}</td>
+            <td>
+                {% if order.driver %}
+                    {{ order.driver.driver_id }}
+                {% else %}
+                    없음
+                {% endif %}
+            </td>
+            <td>{{ order.departure_time }}</td>
+            <td>{{ order.arrival_time }}</td>
+            <td>
+                {% if order.departure_yard %}
+                    {{ order.departure_yard.yard_id }}
+                {% else %}
+                    없음
+                {% endif %}
+            </td>
+            <td>
+                {% if order.arrival_yard %}
+                    {{ order.arrival_yard.yard_id }}
+                {% else %}
+                    없음
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if orders|length == 0 %}
+<p>주문이 없습니다.</p>
+{% endif %}
+{% endblock %}
