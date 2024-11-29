@@ -1,12 +1,13 @@
+# apps/dashboard/urls.py
+
 from django.urls import path
-from . import views
-from .views import upload_csv, OrderListView
+from .views import OrderListView, upload_csv, home  # home 뷰 추가
 
 app_name = 'dashboard'
 
 urlpatterns = [
-    path('', views.index, name='index'),
-    path('home/', views.home, name='home'),
-    path('upload/', upload_csv, name='upload_csv'),
+    path('', home, name='home'),
+    path('upload-orders/', upload_csv, name='upload_csv'),
     path('orders/', OrderListView.as_view(), name='order_list'),
+    # 다른 URL 패턴들...
 ]

@@ -6,4 +6,5 @@ app_name = 'yms_view'
 
 urlpatterns = [
     path('transactions/', TransactionListView.as_view(), name='view_page'),
+    path('transactions/', TransactionListView.as_view(), name='transaction_list'),
 ]
