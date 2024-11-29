@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>야드 상세 정보</title>
+</head>
+<body>
+    <h1>야드 상세 정보</h1>
+
+    <!-- 기본 정보 -->
+    <p><strong>디비전:</strong> {{ yard.division.full_name }}</p>
+    <p><strong>야드 ID:</strong> {{ yard.yard_id }}</p>
+    <p><strong>활성 상태:</strong> {{ yard.is_active|yesno:"활성화,비활성화" }}</p>
+
+    <!-- 사이트 리스트 -->
+    <h2>사이트 리스트</h2>
+    <ul>
+        {% for site in yard.sites.all %}
+            <li>
+                <strong>장비 타입:</strong> {{ site.equipment_type }} <br>
+                <strong>수용 용량:</strong> {{ site.capacity }}
+            </li>
+        {% empty %}
+            <li><em>등록된 사이트가 없습니다.</em></li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'yms_edit:yard-update' pk=yard.pk %}">수정하기</a>
+    <a href="{% url 'yms_edit:yard-delete' pk=yard.pk %}">삭제하기</a>
+
+    <!-- 뒤로 가기 -->
+    <a href="{% url 'yms_edit:equipment-list' %}">뒤로 가기</a>
+</body>
+</html>
