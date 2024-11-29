@@ -1,56 +1,52 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import TemplateView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
 from .models import Yard, Site, Truck, Chassis, Container, Trailer
 from .forms import YardCreateForm, TruckForm, ChassisForm, ContainerForm, TrailerForm
+from django.http import Http404
 
-
-# --- Equipment and Yard List View ---
-class EquipmentAndYardListView(ListView):
+class EquipmentAndYardListView(TemplateView):
     template_name = 'yms_edit/equipment_list.html'
-    context_object_name = 'equipments'
 
-    def get_queryset(self):
-        trucks = Truck.objects.filter(is_active=True)
-        chassis = Chassis.objects.filter(is_active=True)
-        containers = Container.objects.filter(is_active=True)
-        trailers = Trailer.objects.filter(is_active=True)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        equipment_types = ['truck', 'chassis', 'container', 'trailer']
+        equipments = {}
+        for eq_type in equipment_types:
+            model_class = {
+                'truck': Truck,
+                'chassis': Chassis,
+                'container': Container,
+                'trailer': Trailer,
+            }[eq_type]
+            equipments[eq_type + 's'] = model_class.objects.filter(is_active=True)
+
         yards = Yard.objects.filter(is_active=True)
-
         yard_id = self.request.GET.get('yard')
         types = self.request.GET.get('types')
 
-        # 야드 필터링
         if yard_id:
             yards = yards.filter(id=yard_id)
-            trucks = trucks.filter(site__yard_id=yard_id)
-            chassis = chassis.filter(site__yard_id=yard_id)
-            containers = containers.filter(site__yard_id=yard_id)
-            trailers = trailers.filter(site__yard_id=yard_id)
+            for eq_type in equipment_types:
+                model_class = {
+                    'truck': Truck,
+                    'chassis': Chassis,
+                    'container': Container,
+                    'trailer': Trailer,
+                }[eq_type]
+                equipments[eq_type + 's'] = equipments[eq_type + 's'].filter(site__yard_id=yard_id)
 
-        # 장비 타입 필터링
         if types:
             selected_types = types.split(',')
-            trucks = trucks if 'truck' in selected_types else trucks.none()
-            chassis = chassis if 'chassis' in selected_types else chassis.none()
-            containers = containers if 'container' in selected_types else containers.none()
-            trailers = trailers if 'trailer' in selected_types else trailers.none()
-        return {
-            'trucks': trucks,
-            'chassis': chassis,
-            'containers': containers,
-            'trailers': trailers,
-            'yards': yards,
-        }
+            for eq_type in equipment_types:
+                if eq_type not in selected_types:
+                    equipments[eq_type + 's'] = model_class.objects.none()
 
-    def get_context_data(self, **kwargs):
-        """컨텍스트에 데이터 추가"""
-        context = super().get_context_data(**kwargs)
-        context.update(self.get_queryset())
+        context['equipments'] = equipments
+        context['yards'] = yards
         return context
 
-# --- Yard Views ---
 class YardCreateView(CreateView):
     """야드 추가 뷰"""
     model = Yard
@@ -58,9 +54,8 @@ class YardCreateView(CreateView):
     template_name = 'yms_edit/yard_form.html'
 
     def form_valid(self, form):
-        """야드 및 사이트 생성"""
         response = super().form_valid(form)
-        equipment_types = form.cleaned_data['equipment_types']
+        equipment_types = form.cleaned_data.get('equipment_types', [])
         for equipment_type in equipment_types:
             capacity = Site.CAPACITY_MAPPING.get(equipment_type, 30)
             Site.objects.create(
@@ -89,15 +84,15 @@ class YardUpdateView(UpdateView):
     template_name = 'yms_edit/yard_form.html'
 
     def form_valid(self, form):
-        """야드 및 사이트 업데이트"""
         response = super().form_valid(form)
-        equipment_types = form.cleaned_data['equipment_types']
+        equipment_types = form.cleaned_data.get('equipment_types', [])
         self.object.sites.all().delete()
         for equipment_type in equipment_types:
+            capacity = Site.CAPACITY_MAPPING.get(equipment_type, 30)
             Site.objects.create(
                 yard=self.object,
                 equipment_type=equipment_type,
-                capacity=Site.CAPACITY_MAPPING.get(equipment_type, 30)
+                capacity=capacity
             )
         messages.success(self.request, "야드와 사이트가 성공적으로 수정되었습니다.")
         return response
@@ -116,9 +111,6 @@ class YardDeleteView(DeleteView):
         messages.success(self.request, "야드가 성공적으로 삭제되었습니다.")
         return reverse_lazy('yms_edit:equipment-list')
 
-
-# --- Equipment Views ---
-from apps.yms_view.models import Transaction  # 트랜잭션 모델 임포트
 
 class EquipmentDetailView(DetailView):
     """장비 상세 보기 뷰"""
@@ -152,6 +144,7 @@ class EquipmentDetailView(DetailView):
         context['model_name'] = self.kwargs.get('model')
         return context
 
+
 class EquipmentCreateView(CreateView):
     """장비 추가 뷰"""
     template_name = 'yms_edit/equipment_form.html'
@@ -173,8 +166,19 @@ class EquipmentCreateView(CreateView):
         site = form.cleaned_data['site']
         model_name = self.kwargs.get('model').capitalize()
 
-        # 현재 사이트의 장비 수 확인
-        current_count = site.equipmentbase_set.count()
+        # 특정 장비 타입의 현재 수량 확인
+        equipment_type_map = {
+            'Truck': Truck,
+            'Chassis': Chassis,
+            'Container': Container,
+            'Trailer': Trailer,
+        }
+        EquipmentModel = equipment_type_map.get(model_name)
+        if not EquipmentModel:
+            form.add_error('site', f"잘못된 장비 타입: {model_name}")
+            return self.form_invalid(form)
+
+        current_count = EquipmentModel.objects.filter(site=site).count()
         if current_count >= site.capacity:
             form.add_error('site', f"선택한 사이트는 최대 용량({site.capacity})을 초과했습니다.")
             return self.form_invalid(form)
@@ -188,6 +192,7 @@ class EquipmentCreateView(CreateView):
 
     def get_success_url(self):
         return reverse_lazy('yms_edit:equipment-list')
+
 
 class EquipmentUpdateView(UpdateView):
     """장비 수정 뷰"""
@@ -221,9 +226,21 @@ class EquipmentUpdateView(UpdateView):
     def form_valid(self, form):
         site = form.cleaned_data['site']
         model_name = self.kwargs.get('model').capitalize()
+        equipment_type_map = {
+            'Truck': Truck,
+            'Chassis': Chassis,
+            'Container': Container,
+            'Trailer': Trailer,
+        }
+        EquipmentModel = equipment_type_map.get(model_name)
+        if not EquipmentModel:
+            form.add_error('site', f"잘못된 장비 타입: {model_name}")
+            return self.form_invalid(form)
+
         if site.equipment_type != model_name:
             form.add_error('site', f"선택한 사이트는 {model_name} 장비를 지원하지 않습니다.")
             return self.form_invalid(form)
+
         messages.success(self.request, f"{model_name} 장비가 성공적으로 수정되었습니다.")
         return super().form_valid(form)
 

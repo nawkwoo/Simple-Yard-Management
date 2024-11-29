@@ -1,7 +1,9 @@
+# apps/accounts/models.py
+
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.core.validators import RegexValidator
 
-# --- Custom User Manager ---
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
         if not email:
@@ -25,8 +27,6 @@ class CustomUserManager(BaseUserManager):
 
         return self.create_user(username, email, password, **extra_fields)
 
-
-# --- Custom User Model ---
 class CustomUser(AbstractUser):
     USER_TYPE_CHOICES = (
         ('admin', '관리자'),
@@ -44,3 +44,27 @@ class CustomUser(AbstractUser):
 
     def is_staff_member(self):
         return self.user_type == 'staff'
+
+class Driver(models.Model):
+    """드라이버 모델"""
+    user = models.OneToOneField(
+        CustomUser,  # 직접 참조
+        on_delete=models.CASCADE,
+        related_name='accounts_driver_profile',  # 고유한 related_name
+        limit_choices_to={"user_type": "staff"},  # 직원만 선택 가능
+    )
+    driver_id = models.CharField(
+        max_length=8,
+        unique=True,
+        validators=[RegexValidator(
+            regex=r"^[A-Z]{6}\d{2}$",
+            message="Driver ID must be 6 letters followed by 2 digits."
+        )]
+    )
+
+    @property
+    def has_personal_vehicle(self):
+        return self.user.has_car
+
+    def __str__(self):
+        return f"{self.driver_id} - {self.user.username}"

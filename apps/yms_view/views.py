@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.db.models import Q
 from django.core.exceptions import ValidationError
 from django.views.generic import ListView
@@ -6,9 +6,11 @@ from apps.dashboard.models import Order
 from apps.yms_view.models import Transaction
 from apps.yms_edit.models import Yard, YardInventory, Truck, Chassis, Container, Trailer, Site
 from datetime import datetime
-from apps.yms_edit.models import EquipmentBase, Truck, Chassis, Container, Trailer
+from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.db import transaction
 
-# --- 주문 처리 로직 ---
 def process_order(order_id):
     """
     특정 주문을 처리하는 함수.
@@ -16,56 +18,58 @@ def process_order(order_id):
     - 성공 시 트랜잭션 생성.
     """
     try:
-        order = Order.objects.get(id=order_id)
-        driver = order.driver
-        equipment = order.truck or order.chassis or order.container or order.trailer
+        with transaction.atomic():
+            order = Order.objects.select_for_update().get(id=order_id)
+            driver = order.driver
+            equipment = order.truck or order.chassis or order.container or order.trailer
 
-        # 주문 유형 검증
-        if not equipment and not driver.user.has_car:
-            raise ValidationError("자가용이 없는 운전자는 차량이 필요합니다.")
-        
-        if order.trailer and order.chassis:
-            raise ValidationError("트레일러와 샤시는 동시에 사용할 수 없습니다.")
+            # 주문 유형 검증
+            if not equipment and not driver.user.has_car:
+                raise ValidationError("자가용이 없는 운전자는 차량이 필요합니다.")
 
-        if order.chassis and not order.truck:
-            raise ValidationError("샤시는 트럭과 함께 사용해야 합니다.")
+            if order.trailer and order.chassis:
+                raise ValidationError("트레일러와 샤시는 동시에 사용할 수 없습니다.")
 
-        if order.container and not order.chassis:
-            raise ValidationError("컨테이너는 샤시와 함께 사용해야 합니다.")
+            if order.chassis and not order.truck:
+                raise ValidationError("샤시는 트럭과 함께 사용해야 합니다.")
 
-        # 출발 야드에서 장비 확인
-        if equipment:
-            inventory_item = YardInventory.objects.filter(
-                yard=order.departure_yard,
-                equipment_id=equipment.serial_number,
-                is_available=True
-            ).first()
+            if order.container and not order.chassis:
+                raise ValidationError("컨테이너는 샤시와 함께 사용해야 합니다.")
 
-            if not inventory_item:
-                raise ValidationError(f"{equipment.serial_number}이 출발 위치 야드에 없습니다.")
+            # 출발 야드에서 장비 확인
+            if equipment:
+                inventory_item = YardInventory.objects.select_for_update().filter(
+                    yard=order.departure_yard,
+                    equipment_id=equipment.serial_number,
+                    is_available=True
+                ).first()
 
-            # 출발 야드에서 장비 제거
-            inventory_item.is_available = False
-            inventory_item.save()
+                if not inventory_item:
+                    raise ValidationError(f"{equipment.serial_number}이 출발 위치 야드에 없습니다.")
 
-            # 도착 야드에 장비 추가
-            YardInventory.objects.create(
-                yard=order.arrival_yard,
-                equipment_type=equipment.__class__.__name__,
-                equipment_id=equipment.serial_number,
-                is_available=True
+                # 출발 야드에서 장비 제거
+                inventory_item.is_available = False
+                inventory_item.save()
+
+                # 도착 야드에 장비 추가
+                YardInventory.objects.create(
+                    yard=order.arrival_yard,
+                    equipment_type=equipment.__class__.__name__,
+                    equipment_id=equipment.serial_number,
+                    is_available=True
+                )
+
+            # 트랜잭션 생성
+            Transaction.objects.create(
+                equipment=equipment,
+                departure_yard=order.departure_yard,
+                arrival_yard=order.arrival_yard,
+                details=f"장비 {equipment.serial_number} 이동 완료." if equipment else "자가용 이동 완료.",
+                movement_time=timezone.now()
             )
 
-        # 트랜잭션 생성
-        Transaction.objects.create(
-            equipment=equipment,
-            departure_yard=order.departure_yard,
-            arrival_yard=order.arrival_yard,
-            details=f"장비 {equipment.serial_number} 이동 완료." if equipment else "자가용 이동 완료."
-        )
-
-        # 주문 상태 업데이트
-        order.status = "COMPLETED"
+            # 주문 상태 업데이트
+            order.status = "COMPLETED"
 
     except ValidationError as e:
         order.status = "FAILED"
@@ -79,7 +83,6 @@ def process_order(order_id):
         order.save()
 
 
-# --- 트랜잭션 리스트 뷰 ---
 class TransactionListView(ListView):
     """
     트랜잭션 기록 및 선택된 야드 장비 정보를 출력하는 뷰.
@@ -116,12 +119,12 @@ class TransactionListView(ListView):
 
         serial_number = self.request.GET.get('serial_number')
         if serial_number:
-            trucks = Truck.objects.filter(serial_number__icontains=serial_number).values_list('id', flat=True)
-            chassis = Chassis.objects.filter(serial_number__icontains=serial_number).values_list('id', flat=True)
-            containers = Container.objects.filter(serial_number__icontains=serial_number).values_list('id', flat=True)
-            trailers = Trailer.objects.filter(serial_number__icontains=serial_number).values_list('id', flat=True)
-
-            queryset = queryset.filter(object_id__in=list(trucks) + list(chassis) + list(containers) + list(trailers))
+            queryset = queryset.filter(
+                Q(equipment__truck__serial_number__icontains=serial_number) |
+                Q(equipment__chassis__serial_number__icontains=serial_number) |
+                Q(equipment__container__serial_number__icontains=serial_number) |
+                Q(equipment__trailer__serial_number__icontains=serial_number)
+            )
 
         return queryset
 
@@ -151,12 +154,15 @@ class TransactionListView(ListView):
 
             # 각 장비 유형별 수량 및 range 리스트 생성
             inventory_status = []
-            for equipment_type, capacity_key in [
-                ('Truck', 'Truck'), ('Chassis', 'Chassis'),
-                ('Container', 'Container'), ('Trailer', 'Trailer')
-            ]:
-                current_count = globals()[equipment_type].objects.filter(site__in=sites).count()
-                capacity = Site.CAPACITY_MAPPING.get(capacity_key, 30)
+            for equipment_type in ['Truck', 'Chassis', 'Container', 'Trailer']:
+                model_class = {
+                    'Truck': Truck,
+                    'Chassis': Chassis,
+                    'Container': Container,
+                    'Trailer': Trailer,
+                }[equipment_type]
+                current_count = model_class.objects.filter(site__in=sites).count()
+                capacity = Site.CAPACITY_MAPPING.get(equipment_type, 30)
                 inventory_status.append({
                     'equipment_type': equipment_type,
                     'current_count': current_count,

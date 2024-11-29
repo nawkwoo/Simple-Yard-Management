@@ -1,11 +1,13 @@
 import csv
+from io import TextIOWrapper
 from django.shortcuts import render, redirect, reverse
 from .models import Order
-from apps.yms_edit.models import Yard, Driver
+from apps.yms_edit.models import Yard, Driver, Truck, Chassis, Container, Trailer
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db import transaction
 
-from django.shortcuts import render
+from django.views.generic import ListView
 
 def index(request):
     return render(request, 'accounts/login.html')
@@ -20,69 +22,90 @@ def home(request):
     }
     return render(request, 'dashboard/home.html', context)
 
+class OrderListView(ListView):
+    model = Order
+    template_name = 'dashboard/order_list.html'
+    context_object_name = 'orders'
+
+@login_required
 def upload_csv(request):
     if request.method == 'POST' and request.FILES.get('csv_file'):
         csv_file = request.FILES['csv_file']
+        if not csv_file.name.endswith('.csv'):
+            messages.error(request, "CSV 파일만 업로드할 수 있습니다.")
+            return redirect('dashboard:upload_csv')
+
         try:
-            decoded_file = csv_file.read().decode('utf-8').splitlines()
+            decoded_file = TextIOWrapper(csv_file.file, encoding='utf-8')
             reader = csv.DictReader(decoded_file)
 
-            for row in reader:
-                # 필요한 데이터 가져오기
-                truck_id = row.get('트럭')
-                chassis_id = row.get('샤시')
-                container_id = row.get('컨테이너')
-                trailer_id = row.get('트레일러')
-                driver_id = row.get('운전자')
+            with transaction.atomic():
+                for row in reader:
+                    # 필수 필드 검증
+                    required_fields = ['출발위치', '도착위치', '출발시간', '도착시간', '운전자']
+                    for field in required_fields:
+                        if not row.get(field):
+                            raise ValueError(f"필수 필드 '{field}'가 누락되었습니다.")
 
-                # 운전자 검증
-                driver = Driver.objects.filter(driver_id=driver_id).first()
-                if not driver:
-                    raise ValueError(f"운전자 {driver_id}가 존재하지 않습니다.")
+                    # 데이터 가져오기
+                    truck_id = row.get('트럭')
+                    chassis_id = row.get('샤시')
+                    container_id = row.get('컨테이너')
+                    trailer_id = row.get('트레일러')
+                    driver_id = row.get('운전자')
+                    departure_time = row.get('출발시간')
+                    arrival_time = row.get('도착시간')
 
-                # 주문 유형 검증
-                if not truck_id and not driver.has_personal_vehicle:
-                    raise ValueError(f"운전자 {driver_id}는 자가용이 없으므로 주문이 유효하지 않습니다.")
+                    # 운전자 검증
+                    driver = Driver.objects.filter(driver_id=driver_id).first()
+                    if not driver:
+                        raise ValueError(f"운전자 {driver_id}가 존재하지 않습니다.")
 
-                if trailer_id and chassis_id:
-                    raise ValueError("트레일러와 샤시는 동시에 선택할 수 없습니다.")
+                    # 주문 유형 검증
+                    if not truck_id and not driver.has_personal_vehicle:
+                        raise ValueError(f"운전자 {driver_id}는 자가용이 없으므로 트럭이 필요합니다.")
 
-                if chassis_id and not truck_id:
-                    raise ValueError("샤시는 트럭이 있어야 선택할 수 있습니다.")
+                    if trailer_id and chassis_id:
+                        raise ValueError("트레일러와 샤시는 동시에 선택할 수 없습니다.")
 
-                if container_id and not chassis_id:
-                    raise ValueError("컨테이너는 샤시가 있어야 선택할 수 있습니다.")
+                    if chassis_id and not truck_id:
+                        raise ValueError("샤시는 트럭이 있어야 선택할 수 있습니다.")
 
-                # 출발 및 도착 야드 검증
-                departure_yard = Yard.objects.filter(yard_id=row['출발위치']).first()
-                arrival_yard = Yard.objects.filter(yard_id=row['도착위치']).first()
-                if not departure_yard or not arrival_yard:
-                    raise ValueError("출발위치 또는 도착위치가 유효하지 않습니다.")
+                    if container_id and not chassis_id:
+                        raise ValueError("컨테이너는 샤시가 있어야 선택할 수 있습니다.")
 
-                # 주문 생성
-                Order.objects.create(
-                    truck=Truck.objects.filter(serial_number=truck_id).first() if truck_id else None,
-                    chassis=Chassis.objects.filter(serial_number=chassis_id).first() if chassis_id else None,
-                    container=Container.objects.filter(serial_number=container_id).first() if container_id else None,
-                    trailer=Trailer.objects.filter(serial_number=trailer_id).first() if trailer_id else None,
-                    driver=driver,
-                    departure_time=row['출발시간'],
-                    arrival_time=row['도착시간'],
-                    departure_yard=departure_yard,
-                    arrival_yard=arrival_yard,
-                )
+                    # 출발 및 도착 야드 검증
+                    departure_yard = Yard.objects.filter(yard_id=row['출발위치']).first()
+                    arrival_yard = Yard.objects.filter(yard_id=row['도착위치']).first()
+                    if not departure_yard or not arrival_yard:
+                        raise ValueError("출발위치 또는 도착위치가 유효하지 않습니다.")
+
+                    # 장비 객체 가져오기
+                    truck = Truck.objects.filter(serial_number=truck_id).first() if truck_id else None
+                    chassis = Chassis.objects.filter(serial_number=chassis_id).first() if chassis_id else None
+                    container = Container.objects.filter(serial_number=container_id).first() if container_id else None
+                    trailer = Trailer.objects.filter(serial_number=trailer_id).first() if trailer_id else None
+
+                    # 주문 생성
+                    order = Order.objects.create(
+                        truck=truck,
+                        chassis=chassis,
+                        container=container,
+                        trailer=trailer,
+                        driver=driver,
+                        departure_time=departure_time,
+                        arrival_time=arrival_time,
+                        departure_yard=departure_yard,
+                        arrival_yard=arrival_yard,
+                    )
+
+                    # 주문 처리 함수 호출
+                    process_order(order.id)
 
             messages.success(request, "CSV 파일이 성공적으로 업로드되었습니다.")
             return redirect('dashboard:order_list')
 
         except Exception as e:
             messages.error(request, f"CSV 처리 중 오류 발생: {e}")
-    
+
     return render(request, 'dashboard/upload_csv.html')
-
-from django.views.generic import ListView
-
-class OrderListView(ListView):
-    model = Order
-    template_name = 'dashboard/order_list.html'
-    context_object_name = 'orders'

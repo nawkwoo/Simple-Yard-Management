@@ -1,7 +1,10 @@
+# apps/yms_edit/models.py
+
 from django.db import models
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.fields import GenericRelation
+from apps.accounts.models import Driver  # accounts.Driver를 임포트
 
 # --- 공통 추상 모델 ---
 class BaseModel(models.Model):
@@ -11,7 +14,6 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
-
 
 # --- Division ---
 class Division(BaseModel):
@@ -58,7 +60,6 @@ class Yard(BaseModel):
     def __str__(self):
         return f"{self.division.name} - {self.yard_id}"
 
-
 # --- Yard Inventory ---
 class YardInventory(models.Model):
     """야드 인벤토리 모델"""
@@ -69,7 +70,6 @@ class YardInventory(models.Model):
 
     def __str__(self):
         return f"{self.equipment_type} - {self.equipment_id}"
-
 
 # --- Site ---
 class Site(BaseModel):
@@ -124,7 +124,6 @@ class EquipmentBase(BaseModel):
         if self.site.is_full():
             raise ValidationError("해당 사이트는 이미 최대 수용량에 도달했습니다.")
 
-
 class Truck(EquipmentBase):
     """트럭 모델"""
     transactions = GenericRelation('yms_view.Transaction')
@@ -136,7 +135,6 @@ class Truck(EquipmentBase):
 
     def __str__(self):
         return self.truck_id
-
 
 class Chassis(EquipmentBase):
     """샤시 모델"""
@@ -153,7 +151,6 @@ class Chassis(EquipmentBase):
 
     def __str__(self):
         return self.chassis_id
-
 
 class Container(EquipmentBase):
     """컨테이너 모델"""
@@ -175,7 +172,6 @@ class Container(EquipmentBase):
     def __str__(self):
         return self.container_id
 
-
 class Trailer(EquipmentBase):
     """트레일러 모델"""
     transactions = GenericRelation('yms_view.Transaction')
@@ -188,31 +184,3 @@ class Trailer(EquipmentBase):
 
     def __str__(self):
         return self.trailer_id
-
-
-# --- Driver ---
-from apps.accounts.models import CustomUser
-
-class Driver(models.Model):
-    """드라이버 모델"""
-    user = models.OneToOneField(
-        CustomUser,
-        on_delete=models.CASCADE,
-        limit_choices_to={"user_type": "staff"},  # 직원만 선택 가능
-        related_name="driver_profile",  # CustomUser에서 역참조 가능
-    )
-    driver_id = models.CharField(
-        max_length=8,
-        unique=True,
-        validators=[RegexValidator(
-            regex=r"^[A-Z]{6}\d{2}$",
-            message="Driver ID must be 6 letters followed by 2 digits."
-        )]
-    )
-
-    @property
-    def has_personal_vehicle(self):
-        return self.user.has_car
-    
-    def __str__(self):
-        return f"{self.driver_id} - {self.user.username}"

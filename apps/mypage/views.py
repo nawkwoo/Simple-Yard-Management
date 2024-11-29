@@ -10,11 +10,13 @@ def profile(request):
 @login_required
 def edit_profile(request):
     if request.method == 'POST':
-        form = ProfileEditForm(request.POST, instance=request.user)
+        form = ProfileEditForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             form.save()
             messages.success(request, "프로필이 성공적으로 수정되었습니다.")
             return redirect('mypage:profile')
+        else:
+            messages.error(request, "프로필 수정에 실패했습니다.")
     else:
         form = ProfileEditForm(instance=request.user)
 
