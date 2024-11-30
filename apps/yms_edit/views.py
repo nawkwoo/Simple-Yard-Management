@@ -12,41 +12,57 @@ class EquipmentAndYardListView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         equipment_types = ['truck', 'chassis', 'container', 'trailer']
+        model_classes = {
+            'truck': Truck,
+            'chassis': Chassis,
+            'container': Container,
+            'trailer': Trailer,
+        }
         equipments = {}
-        for eq_type in equipment_types:
-            model_class = {
-                'truck': Truck,
-                'chassis': Chassis,
-                'container': Container,
-                'trailer': Trailer,
-            }[eq_type]
-            equipments[eq_type + 's'] = model_class.objects.filter(is_active=True)
+        selected_types = []
 
-        yards = Yard.objects.filter(is_active=True)
+        # 모든 장비를 가져옵니다.
+        for eq_type in equipment_types:
+            model_class = model_classes[eq_type]
+            equipments[eq_type + '_list'] = model_class.objects.filter(is_active=True)
+
+        # 야드 및 필터 파라미터를 가져옵니다.
+        all_yards = Yard.objects.filter(is_active=True)
+        yards = all_yards
         yard_id = self.request.GET.get('yard')
         types = self.request.GET.get('types')
 
         if yard_id:
-            yards = yards.filter(id=yard_id)
-            for eq_type in equipment_types:
-                model_class = {
-                    'truck': Truck,
-                    'chassis': Chassis,
-                    'container': Container,
-                    'trailer': Trailer,
-                }[eq_type]
-                equipments[eq_type + 's'] = equipments[eq_type + 's'].filter(site__yard_id=yard_id)
+            try:
+                yard_id_int = int(yard_id)
+                yards = yards.filter(id=yard_id_int)
+                for eq_type in equipment_types:
+                    equipments[eq_type + '_list'] = equipments[eq_type + '_list'].filter(site__yard_id=yard_id_int)
+            except ValueError:
+                pass  # yard_id가 유효한 정수가 아닐 경우 필터를 적용하지 않습니다.
 
         if types:
             selected_types = types.split(',')
             for eq_type in equipment_types:
                 if eq_type not in selected_types:
-                    equipments[eq_type + 's'] = model_class.objects.none()
+                    equipments[eq_type + '_list'] = equipments[eq_type + '_list'].none()
+        else:
+            # 선택된 타입이 없으면 모든 타입을 선택한 것으로 간주
+            selected_types = equipment_types.copy()
 
-        context['equipments'] = equipments
+        # 컨텍스트에 장비 리스트를 추가합니다.
+        for eq_type in equipment_types:
+            if eq_type == 'chassis':
+                context['chassis'] = equipments[eq_type + '_list']
+            else:
+                context[eq_type + 's'] = equipments[eq_type + '_list']
+
+        context['all_yards'] = all_yards
         context['yards'] = yards
+        context['selected_yard_id'] = int(yard_id) if yard_id else None
+        context['selected_types'] = selected_types
+        context['all_types_selected'] = (len(selected_types) == len(equipment_types))
         return context
-
 class YardCreateView(CreateView):
     """야드 추가 뷰"""
     model = Yard
