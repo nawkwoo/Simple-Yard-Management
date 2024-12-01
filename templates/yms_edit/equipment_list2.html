@@ -1,0 +1,251 @@
+<!-- templates/yms_edit/equipment_list.html -->
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>이큅먼트 및 야드 리스트</title>
+    <style>
+        /* 필터 버튼 스타일 */
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center; /* 세로 정렬을 위해 추가 */
+        }
+        .filter-buttons button {
+            margin: 5px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+        }
+        .filter-buttons button.active {
+            background-color: #007BFF;
+            color: white;
+        }
+        /* 애플 스타일의 토글 스위치 스타일 */
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            margin: 5px;
+        }
+        .toggle-switch input {
+            display: none;
+        }
+        .toggle-switch-label {
+            display: block;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid #e6e6e6;
+            border-radius: 30px;
+            background-color: #e6e6e6;
+            transition: background-color 0.3s ease-in-out;
+        }
+        .toggle-switch-label:before {
+            content: '';
+            display: block;
+            width: 26px;
+            height: 26px;
+            margin: 1px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease-in-out;
+        }
+        .toggle-switch input:checked + .toggle-switch-label {
+            background-color: #4cd964; /* 애플 그린 컬러 */
+        }
+        .toggle-switch input:checked + .toggle-switch-label:before {
+            transform: translateX(30px);
+        }
+        /* 추가 버튼 스타일 */
+        .action-buttons a {
+            margin: 5px;
+            padding: 10px;
+            display: inline-block;
+            text-decoration: none;
+            border: 1px solid #28a745;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
+        }
+        .action-buttons a:hover {
+            background-color: #218838;
+        }
+        /* 섹션 스타일 */
+        .section {
+            margin-bottom: 30px;
+        }
+        /* 리스트 스타일 */
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul li {
+            margin: 5px 0;
+        }
+        /* 제목 스타일 */
+        h2 {
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <h1>장비 및 야드 리스트</h1>
+
+    <!-- 필터 영역 -->
+    <div class="section">
+        <h2>야드 필터링</h2>
+        <div class="filter-buttons">
+            <button onclick="applyFilter({ yard: '' })"
+                {% if not selected_yard_id %}class="active"{% endif %}>전체 야드</button>
+            {% for yard in all_yards %}
+                <button onclick="applyFilter({ yard: '{{ yard.id }}' })"
+                    {% if selected_yard_id == yard.id %}class="active"{% endif %}>
+                    {{ yard.division.name }} - {{ yard.yard_id }}
+                </button>
+            {% endfor %}
+        </div>
+
+        <h2>장비 타입 필터링</h2>
+        <div class="filter-buttons">
+            <!-- 애플 스타일의 토글 스위치로 전체 선택 구현 -->
+            <label class="toggle-switch">
+                <input type="checkbox" id="toggle-all" {% if all_types_selected %}checked{% endif %} onchange="toggleAllTypes(this.checked)">
+                <span class="toggle-switch-label"></span>
+            </label>
+            <span>전체 선택</span> <!-- 토글 스위치 옆에 라벨 추가 -->
+            <!-- 장비 타입 버튼들 -->
+            <button onclick="toggleTypeFilter('truck')"
+                {% if 'truck' in selected_types %}class="active"{% endif %}>트럭</button>
+            <button onclick="toggleTypeFilter('chassis')"
+                {% if 'chassis' in selected_types %}class="active"{% endif %}>샤시</button>
+            <button onclick="toggleTypeFilter('container')"
+                {% if 'container' in selected_types %}class="active"{% endif %}>컨테이너</button>
+            <button onclick="toggleTypeFilter('trailer')"
+                {% if 'trailer' in selected_types %}class="active"{% endif %}>트레일러</button>
+        </div>
+    </div>
+
+    <!-- 추가 버튼 영역 -->
+    <div class="action-buttons section">
+        <h2>추가하기</h2>
+        <a href="{% url 'yms_edit:yard-add' %}">야드 추가</a>
+        <a href="{% url 'yms_edit:equipment-add' model='truck' %}">트럭 추가</a>
+        <a href="{% url 'yms_edit:equipment-add' model='chassis' %}">샤시 추가</a>
+        <a href="{% url 'yms_edit:equipment-add' model='container' %}">컨테이너 추가</a>
+        <a href="{% url 'yms_edit:equipment-add' model='trailer' %}">트레일러 추가</a>
+    </div>
+
+    <!-- 야드 리스트 -->
+    <div class="section">
+        <h2>야드 리스트</h2>
+        {% if yards %}
+            <ul>
+                {% for yard in yards %}
+                    <li>
+                        <a href="{% url 'yms_edit:yard-detail' pk=yard.pk %}">
+                            {{ yard.division.name }} - {{ yard.yard_id }} ({{ yard.is_active|yesno:"활성화,비활성화" }})
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>선택된 야드가 없습니다.</p>
+        {% endif %}
+    </div>
+
+    <!-- 장비 리스트 -->
+    <div class="section">
+        <h2>장비 리스트</h2>
+        <ul>
+            <!-- 트럭 리스트 -->
+            {% if trucks %}
+                {% for truck in trucks %}
+                    <li>
+                        <a href="{% url 'yms_edit:equipment-detail' model='truck' pk=truck.pk %}">
+                            트럭: {{ truck.truck_id }} - {{ truck.serial_number }}
+                        </a>
+                    </li>
+                {% endfor %}
+            {% endif %}
+            <!-- 샤시 리스트 -->
+            {% if chassis %}
+                {% for chassis_item in chassis %}
+                    <li>
+                        <a href="{% url 'yms_edit:equipment-detail' model='chassis' pk=chassis_item.pk %}">
+                            샤시: {{ chassis_item.chassis_id }} - {{ chassis_item.serial_number }}
+                        </a>
+                    </li>
+                {% endfor %}
+            {% endif %}
+            <!-- 컨테이너 리스트 -->
+            {% if containers %}
+                {% for container in containers %}
+                    <li>
+                        <a href="{% url 'yms_edit:equipment-detail' model='container' pk=container.pk %}">
+                            컨테이너: {{ container.container_id }} - {{ container.serial_number }}
+                        </a>
+                    </li>
+                {% endfor %}
+            {% endif %}
+            <!-- 트레일러 리스트 -->
+            {% if trailers %}
+                {% for trailer in trailers %}
+                    <li>
+                        <a href="{% url 'yms_edit:equipment-detail' model='trailer' pk=trailer.pk %}">
+                            트레일러: {{ trailer.trailer_id }} - {{ trailer.serial_number }}
+                        </a>
+                    </li>
+                {% endfor %}
+            {% endif %}
+            <!-- 장비가 없을 경우 -->
+            {% if not trucks and not chassis and not containers and not trailers %}
+                <li>선택된 장비가 없습니다.</li>
+            {% endif %}
+        </ul>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 서버에서 전달된 selected_types를 JavaScript Set으로 변환
+        const selectedTypes = new Set({% if selected_types %}{{ selected_types|safe }}{% else %}[] {% endif %});
+        const allTypes = ['truck', 'chassis', 'container', 'trailer'];
+
+        function applyFilter(params) {
+            const url = new URL(window.location.href);
+            Object.keys(params).forEach(key => {
+                if (params[key]) {
+                    url.searchParams.set(key, params[key]);
+                } else {
+                    url.searchParams.delete(key);
+                }
+            });
+            window.location.href = url.toString();
+        }
+
+        function toggleTypeFilter(type) {
+            if (selectedTypes.has(type)) {
+                selectedTypes.delete(type);
+            } else {
+                selectedTypes.add(type);
+            }
+            // 전체 선택 토글 상태 업데이트
+            document.getElementById('toggle-all').checked = (selectedTypes.size === allTypes.length);
+            applyFilter({ types: Array.from(selectedTypes).join(',') });
+        }
+
+        function toggleAllTypes(checked) {
+            if (checked) {
+                // 모두 선택
+                allTypes.forEach(type => selectedTypes.add(type));
+            } else {
+                // 모두 해제
+                selectedTypes.clear();
+            }
+            applyFilter({ types: Array.from(selectedTypes).join(',') });
+        }
+    </script>
+</body>
+</html>

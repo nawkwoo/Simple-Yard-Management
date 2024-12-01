@@ -5,6 +5,7 @@ from django.contrib import messages
 from .models import Yard, Site, Truck, Chassis, Container, Trailer
 from .forms import YardCreateForm, TruckForm, ChassisForm, ContainerForm, TrailerForm
 from django.http import Http404
+from django.conf import settings
 
 class EquipmentAndYardListView(TemplateView):
     template_name = 'yms_edit/equipment_list.html'
@@ -62,12 +63,37 @@ class EquipmentAndYardListView(TemplateView):
         context['selected_yard_id'] = int(yard_id) if yard_id else None
         context['selected_types'] = selected_types
         context['all_types_selected'] = (len(selected_types) == len(equipment_types))
+
+        # 구글 지도 API 키를 컨텍스트에 추가합니다.
+        context['google_maps_api_key'] = settings.GOOGLE_MAPS_API_KEY  # settings.py에서 API 키 가져오기
+
         return context
+    
+
+class YardDetailView(DetailView):
+    """야드 상세 보기 뷰"""
+    model = Yard
+    template_name = 'yms_edit/yard_detail.html'
+    context_object_name = 'yard'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # 구글 지도 API 키를 컨텍스트에 추가
+        context['google_maps_api_key'] = settings.GOOGLE_MAPS_API_KEY
+        return context
+
+
 class YardCreateView(CreateView):
     """야드 추가 뷰"""
     model = Yard
     form_class = YardCreateForm
     template_name = 'yms_edit/yard_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # 구글 지도 API 키를 컨텍스트에 추가
+        context['google_maps_api_key'] = settings.GOOGLE_MAPS_API_KEY
+        return context
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -85,19 +111,17 @@ class YardCreateView(CreateView):
     def get_success_url(self):
         return reverse_lazy('yms_edit:equipment-list')
 
-
-class YardDetailView(DetailView):
-    """야드 상세 보기 뷰"""
-    model = Yard
-    template_name = 'yms_edit/yard_detail.html'
-    context_object_name = 'yard'
-
-
 class YardUpdateView(UpdateView):
     """야드 수정 뷰"""
     model = Yard
     form_class = YardCreateForm
     template_name = 'yms_edit/yard_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # 구글 지도 API 키를 컨텍스트에 추가
+        context['google_maps_api_key'] = settings.GOOGLE_MAPS_API_KEY
+        return context
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -115,6 +139,7 @@ class YardUpdateView(UpdateView):
 
     def get_success_url(self):
         return reverse_lazy('yms_edit:equipment-list')
+
 
 
 class YardDeleteView(DeleteView):

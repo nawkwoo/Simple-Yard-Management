@@ -1,3 +1,5 @@
+# apps/yms_edit/forms.py
+
 from django import forms
 from .models import Division, Yard, Site, Truck, Chassis, Container, Trailer
 
@@ -18,12 +20,16 @@ class YardCreateForm(forms.ModelForm):
 
     class Meta:
         model = Yard
-        fields = ['division', 'yard_id', 'is_active']
+        fields = ['division', 'yard_id', 'address', 'latitude', 'longitude', 'is_active']  # 'address', 'latitude', 'longitude' 추가
+        widgets = {
+            'latitude': forms.HiddenInput(),  # 위도 필드를 숨김 처리
+            'longitude': forms.HiddenInput(),  # 경도 필드를 숨김 처리
+        }
 
     def __init__(self, *args, **kwargs):
         """기존 데이터 초기값 설정"""
-        instance = kwargs.get('instance')  # 안전하게 instance를 가져옴
-        if instance:  # instance가 존재할 때만 처리
+        instance = kwargs.get('instance')
+        if instance:
             kwargs['initial'] = kwargs.get('initial', {})
             kwargs['initial']['equipment_types'] = [
                 site.equipment_type for site in instance.sites.all()
