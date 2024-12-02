@@ -5,9 +5,13 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from apps.dashboard.models import Order
 from apps.yms_edit.models import Yard, YardInventory, Truck, Chassis, Container, Trailer
+from .models import Transaction
+import logging
+
+logger = logging.getLogger('yms_view')
+
 
 def process_order(order_id):
-    from apps.dashboard.models import Order
     """
     특정 주문을 처리하는 함수.
     - 출발 야드에서 장비를 제거하고 도착 야드에 추가.
@@ -15,12 +19,18 @@ def process_order(order_id):
     """
     try:
         with transaction.atomic():
+            # 주문 조회 및 잠금
             order = Order.objects.select_for_update().get(id=order_id)
-            driver = order.driver
+            driver = order.driver  # Driver 모델이 CustomUser와 연결되어 있다고 가정
+            profile = getattr(driver, 'profile', None)
+
+            if not profile:
+                raise ValidationError("운전사의 프로필이 존재하지 않습니다.")
+
             equipment = order.truck or order.chassis or order.container or order.trailer
 
             # 주문 유형 검증
-            if not equipment and not driver.has_personal_vehicle:
+            if not equipment and not profile.has_car:
                 raise ValidationError("자가용이 없는 운전자는 차량이 필요합니다.")
 
             if order.trailer and order.chassis:
@@ -58,7 +68,10 @@ def process_order(order_id):
             # 트랜잭션 생성
             Transaction.objects.create(
                 equipment_type=equipment.__class__.__name__ if equipment else 'PersonalVehicle',
-                equipment=equipment.id if equipment else None,
+                truck=equipment if isinstance(equipment, Truck) else None,
+                chassis=equipment if isinstance(equipment, Chassis) else None,
+                container=equipment if isinstance(equipment, Container) else None,
+                trailer=equipment if isinstance(equipment, Trailer) else None,
                 departure_yard=order.departure_yard,
                 arrival_yard=order.arrival_yard,
                 details=f"장비 {equipment.serial_number} 이동 완료." if equipment else "자가용 이동 완료.",
@@ -67,14 +80,25 @@ def process_order(order_id):
 
             # 주문 상태 업데이트
             order.status = "COMPLETED"
+            order.error_message = None  # 오류 메시지 초기화
+
+            logger.info(f"Order {order_id} processed successfully.")
+
+    except Order.DoesNotExist:
+        logger.error(f"Order with ID {order_id} does not exist.")
+        raise ValidationError("존재하지 않는 주문입니다.")
 
     except ValidationError as e:
         order.status = "FAILED"
         order.error_message = str(e)
+        logger.warning(f"ValidationError while processing order {order_id}: {e}")
+        raise
 
     except Exception as e:
         order.status = "FAILED"
         order.error_message = f"처리 중 오류 발생: {str(e)}"
+        logger.error(f"Unexpected error while processing order {order_id}: {e}")
+        raise ValidationError(f"처리 중 오류 발생: {str(e)}")
 
     finally:
         order.save()

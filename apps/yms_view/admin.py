@@ -2,27 +2,37 @@
 
 from django.contrib import admin
 from .models import Transaction
-from apps.yms_edit.models import Truck, Chassis, Container, Trailer
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'equipment_type', 'get_equipment_serial_number', 'departure_yard', 'arrival_yard', 'movement_time')
+    """
+    Transaction 모델을 위한 관리자 인터페이스 설정.
+    """
+    list_display = (
+        'id',
+        'equipment_type',
+        'get_equipment',
+        'departure_yard',
+        'arrival_yard',
+        'movement_time',
+        'details'
+    )
     list_filter = ('equipment_type', 'departure_yard', 'arrival_yard', 'movement_time')
-    search_fields = ('equipment', 'departure_yard__yard_id', 'arrival_yard__yard_id')
+    search_fields = ('truck__serial_number', 'chassis__serial_number', 'container__serial_number', 'trailer__serial_number', 'details')
 
-    def get_equipment_serial_number(self, obj):
-        if obj.equipment_type == 'Truck':
-            truck = Truck.objects.filter(id=obj.equipment).first()
-            return truck.serial_number if truck else 'Unknown'
-        elif obj.equipment_type == 'Chassis':
-            chassis = Chassis.objects.filter(id=obj.equipment).first()
-            return chassis.serial_number if chassis else 'Unknown'
-        elif obj.equipment_type == 'Container':
-            container = Container.objects.filter(id=obj.equipment).first()
-            return container.serial_number if container else 'Unknown'
-        elif obj.equipment_type == 'Trailer':
-            trailer = Trailer.objects.filter(id=obj.equipment).first()
-            return trailer.serial_number if trailer else 'Unknown'
-        else:
-            return 'N/A'
-    get_equipment_serial_number.short_description = 'Equipment Serial Number'
+    def get_equipment(self, obj):
+        """
+        선택된 장비 유형에 따라 장비를 표시합니다.
+        """
+        if obj.equipment_type == 'Truck' and obj.truck:
+            return obj.truck.serial_number
+        elif obj.equipment_type == 'Chassis' and obj.chassis:
+            return obj.chassis.serial_number
+        elif obj.equipment_type == 'Container' and obj.container:
+            return obj.container.serial_number
+        elif obj.equipment_type == 'Trailer' and obj.trailer:
+            return obj.trailer.serial_number
+        elif obj.equipment_type == 'PersonalVehicle':
+            return "Personal Vehicle"
+        return "N/A"
+    get_equipment.short_description = '장비'

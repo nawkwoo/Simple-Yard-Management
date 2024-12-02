@@ -1,10 +1,33 @@
 # apps/dashboard/admin.py
 
 from django.contrib import admin
+from django.conf import settings
 from .models import Order
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'truck', 'chassis', 'container', 'trailer', 'driver', 'departure_yard', 'arrival_yard', 'departure_time', 'arrival_time', 'status')
-    list_filter = ('status', 'departure_yard', 'arrival_yard', 'departure_time', 'arrival_time')
-    search_fields = ('truck__serial_number', 'chassis__serial_number', 'container__serial_number', 'trailer__serial_number', 'driver__driver_id', 'driver__user__username')
+    """
+    Order 모델을 위한 관리자 인터페이스 설정.
+    """
+    list_display = (
+        'id', 
+        'driver', 
+        'truck', 
+        'chassis', 
+        'container', 
+        'trailer', 
+        'departure_yard', 
+        'arrival_yard', 
+        'status'
+    )
+    list_filter = ('status', 'departure_yard', 'arrival_yard', 'driver')
+    search_fields = (
+        'driver__username', 
+        'truck__truck_id', 
+        'chassis__chassis_id', 
+        'container__container_id', 
+        'trailer__trailer_id'
+    )
+
+    # 필드 정렬 순서 개선
+    ordering = ('-id',)

@@ -1,18 +1,47 @@
-from django.shortcuts import render, get_object_or_404
-from django.urls import reverse_lazy
-from django.views.generic import TemplateView, DetailView, CreateView, UpdateView, DeleteView
+# apps/yms_edit/views.py
+
+import csv
+from io import TextIOWrapper
+from datetime import datetime
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse_lazy, reverse
+from django.views.generic import (
+    TemplateView, DetailView,
+    CreateView, UpdateView, DeleteView,
+    ListView
+)
 from django.contrib import messages
-from .models import Yard, Site, Truck, Chassis, Container, Trailer
-from .forms import YardCreateForm, TruckForm, ChassisForm, ContainerForm, TrailerForm
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import Http404
 
+from .models import Yard, Site, Truck, Chassis, Container, Trailer
+from .forms import (
+    YardCreateForm, TruckForm, ChassisForm,
+    ContainerForm, TrailerForm
+)
+from apps.yms_view.models import Transaction
+from apps.yms_view.utils import process_order
+from apps.dashboard.forms import CSVUploadForm
+
+
 class EquipmentAndYardListView(TemplateView):
+    """
+    장비와 야드 목록을 보여주는 뷰.
+    """
     template_name = 'yms_edit/equipment_list.html'
 
     def get_context_data(self, **kwargs):
+        """
+        장비 유형별로 활성화된 장비를 필터링하여 컨텍스트에 추가합니다.
+        또한, 야드 필터링 및 장비 유형 필터링을 적용합니다.
+        """
         context = super().get_context_data(**kwargs)
         equipment_types = ['truck', 'chassis', 'container', 'trailer']
         equipments = {}
+
+        # 장비 유형별 활성화된 장비 조회
         for eq_type in equipment_types:
             model_class = {
                 'truck': Truck,
@@ -22,6 +51,7 @@ class EquipmentAndYardListView(TemplateView):
             }[eq_type]
             equipments[eq_type + 's'] = model_class.objects.filter(is_active=True)
 
+        # 야드 필터링
         yards = Yard.objects.filter(is_active=True)
         yard_id = self.request.GET.get('yard')
         types = self.request.GET.get('types')
@@ -37,23 +67,33 @@ class EquipmentAndYardListView(TemplateView):
                 }[eq_type]
                 equipments[eq_type + 's'] = equipments[eq_type + 's'].filter(site__yard_id=yard_id)
 
+        # 장비 유형 필터링
         if types:
             selected_types = types.split(',')
             for eq_type in equipment_types:
                 if eq_type not in selected_types:
-                    equipments[eq_type + 's'] = model_class.objects.none()
+                    equipments[eq_type + 's'] = models.QuerySet.none()
 
-        context['equipments'] = equipments
+        # 컨텍스트에 추가
+        for eq_type in equipment_types:
+            context[eq_type + 's'] = equipments[eq_type + 's']
+
         context['yards'] = yards
         return context
 
+
 class YardCreateView(CreateView):
-    """야드 추가 뷰"""
+    """
+    야드 추가 뷰.
+    """
     model = Yard
     form_class = YardCreateForm
     template_name = 'yms_edit/yard_form.html'
 
     def form_valid(self, form):
+        """
+        폼이 유효할 때, 야드와 관련된 사이트를 생성합니다.
+        """
         response = super().form_valid(form)
         equipment_types = form.cleaned_data.get('equipment_types', [])
         for equipment_type in equipment_types:
@@ -71,19 +111,26 @@ class YardCreateView(CreateView):
 
 
 class YardDetailView(DetailView):
-    """야드 상세 보기 뷰"""
+    """
+    야드 상세 보기 뷰.
+    """
     model = Yard
     template_name = 'yms_edit/yard_detail.html'
     context_object_name = 'yard'
 
 
 class YardUpdateView(UpdateView):
-    """야드 수정 뷰"""
+    """
+    야드 수정 뷰.
+    """
     model = Yard
     form_class = YardCreateForm
     template_name = 'yms_edit/yard_form.html'
 
     def form_valid(self, form):
+        """
+        폼이 유효할 때, 기존 사이트를 삭제하고 새 사이트를 생성합니다.
+        """
         response = super().form_valid(form)
         equipment_types = form.cleaned_data.get('equipment_types', [])
         self.object.sites.all().delete()
@@ -102,7 +149,9 @@ class YardUpdateView(UpdateView):
 
 
 class YardDeleteView(DeleteView):
-    """야드 삭제 뷰"""
+    """
+    야드 삭제 뷰.
+    """
     model = Yard
     template_name = 'yms_edit/yard_confirm_delete.html'
     context_object_name = 'yard'
@@ -113,12 +162,16 @@ class YardDeleteView(DeleteView):
 
 
 class EquipmentDetailView(DetailView):
-    """장비 상세 보기 뷰"""
+    """
+    장비 상세 보기 뷰.
+    """
     template_name = 'yms_edit/equipment_detail.html'
     context_object_name = 'equipment'
 
     def get_object(self):
-        """모델에 따라 장비 객체를 가져옵니다."""
+        """
+        URL 파라미터에 따라 해당 장비 객체를 반환합니다.
+        """
         model = self.kwargs.get('model')
         pk = self.kwargs.get('pk')
         model_class = {
@@ -132,24 +185,34 @@ class EquipmentDetailView(DetailView):
         return get_object_or_404(model_class, pk=pk)
 
     def get_context_data(self, **kwargs):
-        """추가 데이터를 컨텍스트에 전달"""
+        """
+        장비와 관련된 트랜잭션 데이터를 컨텍스트에 추가합니다.
+        """
         context = super().get_context_data(**kwargs)
         equipment = self.get_object()
+        model = self.kwargs.get('model').capitalize()
 
-        # 트랜잭션 필터링: GenericRelation 사용
-        transactions = equipment.transactions.all()
+        # 트랜잭션 필터링: equipment_type과 equipment id를 기준으로 필터링
+        transactions = Transaction.objects.filter(
+            equipment_type=model,
+            equipment=equipment.id
+        ).order_by('-movement_time')
 
-        # 컨텍스트 업데이트
         context['transactions'] = transactions
         context['model_name'] = self.kwargs.get('model')
         return context
 
 
 class EquipmentCreateView(CreateView):
-    """장비 추가 뷰"""
+    """
+    장비 추가 뷰.
+    """
     template_name = 'yms_edit/equipment_form.html'
 
     def get_form_class(self):
+        """
+        URL 파라미터에 따라 적절한 폼 클래스를 반환합니다.
+        """
         model = self.kwargs.get('model')
         form_class = {
             'truck': TruckForm,
@@ -161,33 +224,23 @@ class EquipmentCreateView(CreateView):
             raise Http404("잘못된 모델입니다.")
         return form_class
 
+    def get_form_kwargs(self):
+        """
+        폼에 equipment_type을 전달합니다.
+        """
+        kwargs = super().get_form_kwargs()
+        model = self.kwargs.get('model').capitalize()
+        kwargs['equipment_type'] = model
+        return kwargs
+
     def form_valid(self, form):
-        """사이트 용량 확인 및 검증"""
-        site = form.cleaned_data['site']
-        model_name = self.kwargs.get('model').capitalize()
-
-        # 특정 장비 타입의 현재 수량 확인
-        equipment_type_map = {
-            'Truck': Truck,
-            'Chassis': Chassis,
-            'Container': Container,
-            'Trailer': Trailer,
-        }
-        EquipmentModel = equipment_type_map.get(model_name)
-        if not EquipmentModel:
-            form.add_error('site', f"잘못된 장비 타입: {model_name}")
-            return self.form_invalid(form)
-
-        current_count = EquipmentModel.objects.filter(site=site).count()
-        if current_count >= site.capacity:
-            form.add_error('site', f"선택한 사이트는 최대 용량({site.capacity})을 초과했습니다.")
-            return self.form_invalid(form)
-
-        if site.equipment_type != model_name:
-            form.add_error('site', f"선택한 사이트는 {model_name} 장비를 지원하지 않습니다.")
-            return self.form_invalid(form)
-
-        messages.success(self.request, f"{model_name} 장비가 성공적으로 추가되었습니다.")
+        """
+        폼이 유효할 때, 성공 메시지를 추가합니다.
+        """
+        messages.success(
+            self.request,
+            f"{self.kwargs.get('model').capitalize()} 장비가 성공적으로 추가되었습니다."
+        )
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -195,10 +248,15 @@ class EquipmentCreateView(CreateView):
 
 
 class EquipmentUpdateView(UpdateView):
-    """장비 수정 뷰"""
+    """
+    장비 수정 뷰.
+    """
     template_name = 'yms_edit/equipment_form.html'
 
     def get_form_class(self):
+        """
+        URL 파라미터에 따라 적절한 폼 클래스를 반환합니다.
+        """
         model = self.kwargs.get('model')
         form_class = {
             'truck': TruckForm,
@@ -210,7 +268,19 @@ class EquipmentUpdateView(UpdateView):
             raise Http404("잘못된 모델입니다.")
         return form_class
 
+    def get_form_kwargs(self):
+        """
+        폼에 equipment_type을 전달합니다.
+        """
+        kwargs = super().get_form_kwargs()
+        model = self.kwargs.get('model').capitalize()
+        kwargs['equipment_type'] = model
+        return kwargs
+
     def get_object(self):
+        """
+        URL 파라미터에 따라 해당 장비 객체를 반환합니다.
+        """
         model = self.kwargs.get('model')
         pk = self.kwargs.get('pk')
         model_class = {
@@ -224,24 +294,13 @@ class EquipmentUpdateView(UpdateView):
         return get_object_or_404(model_class, pk=pk)
 
     def form_valid(self, form):
-        site = form.cleaned_data['site']
-        model_name = self.kwargs.get('model').capitalize()
-        equipment_type_map = {
-            'Truck': Truck,
-            'Chassis': Chassis,
-            'Container': Container,
-            'Trailer': Trailer,
-        }
-        EquipmentModel = equipment_type_map.get(model_name)
-        if not EquipmentModel:
-            form.add_error('site', f"잘못된 장비 타입: {model_name}")
-            return self.form_invalid(form)
-
-        if site.equipment_type != model_name:
-            form.add_error('site', f"선택한 사이트는 {model_name} 장비를 지원하지 않습니다.")
-            return self.form_invalid(form)
-
-        messages.success(self.request, f"{model_name} 장비가 성공적으로 수정되었습니다.")
+        """
+        폼이 유효할 때, 성공 메시지를 추가합니다.
+        """
+        messages.success(
+            self.request,
+            f"{self.kwargs.get('model').capitalize()} 장비가 성공적으로 수정되었습니다."
+        )
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -249,10 +308,15 @@ class EquipmentUpdateView(UpdateView):
 
 
 class EquipmentDeleteView(DeleteView):
-    """장비 삭제 뷰"""
+    """
+    장비 삭제 뷰.
+    """
     template_name = 'yms_edit/equipment_confirm_delete.html'
 
     def get_object(self):
+        """
+        URL 파라미터에 따라 해당 장비 객체를 반환합니다.
+        """
         model = self.kwargs.get('model')
         pk = self.kwargs.get('pk')
         model_class = {
@@ -266,5 +330,8 @@ class EquipmentDeleteView(DeleteView):
         return get_object_or_404(model_class, pk=pk)
 
     def get_success_url(self):
+        """
+        삭제 후 성공 메시지를 추가하고, 장비 목록 페이지로 리디렉션합니다.
+        """
         messages.success(self.request, "장비가 성공적으로 삭제되었습니다.")
         return reverse_lazy('yms_edit:equipment-list')
