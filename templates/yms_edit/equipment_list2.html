@@ -4,8 +4,8 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>장비 및 야드 리스트</title>
+    <!-- CSS 파일로 분리하는 것이 좋지만, 여기서는 편의상 내부에 작성합니다. -->
     <style>
         /* 전체 레이아웃 설정 */
         body {
@@ -16,7 +16,45 @@
             height: 100vh; /* 화면 전체 높이 */
         }
 
-        /* 네비게이션 바 스타일은 nav.html에서 관리 */
+        /* 네비게이션 바 스타일 */
+        .sidebar {
+            width: 200px;
+            background-color: #f8f8f8;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .nav-buttons {
+            display: flex;
+            flex-direction: column;
+            padding-top: 20px;
+        }
+        .nav-buttons a {
+            padding: 15px 20px;
+            text-decoration: none;
+            color: #333;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .nav-buttons a:hover {
+            background-color: #e0e0e0;
+        }
+        .nav-buttons a.active {
+            background-color: #d0d0d0;
+            font-weight: bold;
+        }
+        .my-page {
+            padding: 15px 20px;
+            text-decoration: none;
+            color: #333;
+            font-size: 16px;
+            border-top: 1px solid #e0e0e0;
+            transition: background-color 0.3s;
+        }
+        .my-page:hover {
+            background-color: #e0e0e0;
+        }
 
         /* 메인 콘텐츠 영역 */
         .main-content {
@@ -131,10 +169,19 @@
             margin-top: 0;
         }
     </style>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}"></script>
 </head>
 <body>
-    <!-- 네비게이션 바 포함 -->
-    {% include "nav.html" %}
+    <!-- 네비게이션 바 -->
+    <div class="sidebar">
+        <div class="nav-buttons">
+            <a href="#" class="active">HOME</a>
+            <a href="#">EDIT</a>
+            <a href="#">VIEW</a>
+            <a href="#">ORDER</a>
+        </div>
+        <a href="#" class="my-page">마이 페이지</a>
+    </div>
 
     <!-- 메인 콘텐츠 영역 -->
     <div class="main-content">
@@ -189,9 +236,9 @@
             <h3>장비 타입</h3>
             <div class="filter-buttons">
                 <!-- 전체 선택 토글 스위치 -->
-                <label class="toggle-switch" style="display: flex; align-items: center; margin-right: 10px;">
+                <label class="toggle-switch">
                     <input type="checkbox" id="toggle-all" {% if all_types_selected %}checked{% endif %} onchange="toggleAllTypes(this.checked)">
-                    <span class="toggle-switch-label" style="width: 40px; height: 20px; background-color: #ccc; border-radius: 10px; position: relative; margin-right: 5px;"></span>
+                    <span class="toggle-switch-label"></span>
                 </label>
                 <span>전체 선택</span>
             </div>
@@ -318,8 +365,7 @@
         function addYard() {
             window.location.href = "{% url 'yms_edit:yard-add' %}";
         }
-
-        // 지도 초기화 함수
+        
         function initMap() {
             // 지도의 기본 위치 설정 (예: 첫 번째 야드의 위치 또는 기본 위치)
             {% if all_yards and all_yards.0.latitude and all_yards.0.longitude %}
@@ -328,7 +374,7 @@
                 var mapCenter = { lat: 37.5665, lng: 126.9780 }; // 기본 위치 (서울 시청)
             {% endif %}
 
-            // 지도 객체 생성
+            // 지도 객체 생성ㅛ
             var map = new google.maps.Map(document.getElementById('map'), {
                 center: mapCenter,
                 zoom: 12
@@ -351,6 +397,7 @@
         window.onload = function() {
             initMap();
         };
+
     </script>
 </body>
 </html>

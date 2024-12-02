@@ -5,7 +5,6 @@ from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from apps.accounts.models import Driver
 
-
 # --- 공통 추상 모델 ---
 class BaseModel(models.Model):
     """
@@ -72,6 +71,9 @@ class Yard(BaseModel):
         )],
         help_text="예시: YD01 (야드 ID는 YD로 시작하고 두 자리 숫자로 구성됩니다.)"
     )
+    address = models.CharField(max_length=255, null=True, blank=True)  # 주소 필드 추가
+    latitude = models.FloatField(null=True, blank=True)  # 위도 필드
+    longitude = models.FloatField(null=True, blank=True)  # 경도 필드
 
     def __str__(self):
         return f"{self.division.name} - {self.yard_id}"

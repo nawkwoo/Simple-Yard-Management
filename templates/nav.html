@@ -1,0 +1,12 @@
+<!-- apps/yms_edit/templates/yms_edit/nav.html -->
+
+<!-- 네비게이션 바 -->
+<div class="sidebar">
+    <div class="nav-buttons">
+        <a href="{% url 'dashboard:home' %}" class="{% if request.path == '/dashboard/' %}active{% endif %}">HOME</a>
+        <a href="{% url 'yms_edit:equipment-list' %}" class="{% if request.path == '/yms_edit/equipment/' %}active{% endif %}">EDIT</a>
+        <a href="{% url 'yms_view:transaction-list' %}" class="{% if request.path == '/yms_view/transaction/' %}active{% endif %}">VIEW</a>
+        <a href="{% url 'dashboard:order_list' %}" class="{% if request.path == '/dashboard/order/' %}active{% endif %}">ORDER</a>
+    </div>
+    <a href="{% url 'mypage:profile' %}" class="my-page">마이 페이지</a>
+</div>

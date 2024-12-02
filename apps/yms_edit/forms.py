@@ -24,25 +24,30 @@ class YardCreateForm(forms.ModelForm):
 
     class Meta:
         model = Yard
-        fields = ['division', 'yard_id', 'is_active']
+        fields = ['division', 'yard_id', 'address', 'latitude', 'longitude', 'is_active']  # 모든 필드 포함
         widgets = {
             'yard_id': forms.TextInput(attrs={
                 'placeholder': '예: YD01',
                 'class': 'form-control'
             }),
+            'address': forms.TextInput(attrs={
+                'placeholder': '야드 주소 입력',
+                'class': 'form-control'
+            }),
+            'latitude': forms.HiddenInput(),  # 위도 필드를 숨김 처리
+            'longitude': forms.HiddenInput(),  # 경도 필드를 숨김 처리
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'})
         }
         help_texts = {
-            'yard_id': '예시: YD01 (야드 ID는 YD로 시작하고 두 자리 숫자로 구성됩니다.)'
+            'yard_id': '예시: YD01 (야드 ID는 YD로 시작하고 두 자리 숫자로 구성됩니다.)',
+            'address': '야드의 주소를 입력하세요.'
         }
 
     def __init__(self, *args, **kwargs):
-        """
-        기존 데이터 초기값 설정
-        """
-        instance = kwargs.get('instance')  # 안전하게 instance를 가져옴
+        """기존 데이터 초기값 설정"""
+        instance = kwargs.get('instance')
         super().__init__(*args, **kwargs)
-        if instance:  # instance가 존재할 때만 처리
+        if instance:
             self.fields['equipment_types'].initial = [
                 site.equipment_type for site in instance.sites.all()
             ]

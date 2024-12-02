@@ -15,6 +15,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import Http404
+from django.conf import settings
 
 from .models import Yard, Site, Truck, Chassis, Container, Trailer
 from .forms import (
@@ -39,46 +40,75 @@ class EquipmentAndYardListView(TemplateView):
         """
         context = super().get_context_data(**kwargs)
         equipment_types = ['truck', 'chassis', 'container', 'trailer']
+        model_classes = {
+            'truck': Truck,
+            'chassis': Chassis,
+            'container': Container,
+            'trailer': Trailer,
+        }
         equipments = {}
+        selected_types = []
 
-        # 장비 유형별 활성화된 장비 조회
+        # 모든 장비를 가져옵니다.
         for eq_type in equipment_types:
-            model_class = {
-                'truck': Truck,
-                'chassis': Chassis,
-                'container': Container,
-                'trailer': Trailer,
-            }[eq_type]
-            equipments[eq_type + 's'] = model_class.objects.filter(is_active=True)
+            model_class = model_classes[eq_type]
+            equipments[eq_type + '_list'] = model_class.objects.filter(is_active=True)
 
-        # 야드 필터링
-        yards = Yard.objects.filter(is_active=True)
+        # 야드 및 필터 파라미터를 가져옵니다.
+        all_yards = Yard.objects.filter(is_active=True)
+        yards = all_yards
+
         yard_id = self.request.GET.get('yard')
         types = self.request.GET.get('types')
 
         if yard_id:
-            yards = yards.filter(id=yard_id)
-            for eq_type in equipment_types:
-                model_class = {
-                    'truck': Truck,
-                    'chassis': Chassis,
-                    'container': Container,
-                    'trailer': Trailer,
-                }[eq_type]
-                equipments[eq_type + 's'] = equipments[eq_type + 's'].filter(site__yard_id=yard_id)
+            try:
+                yard_id_int = int(yard_id)
+                yards = yards.filter(id=yard_id_int)
+                for eq_type in equipment_types:
+                    equipments[eq_type + '_list'] = equipments[eq_type + '_list'].filter(site__yard__id=yard_id_int)
+            except ValueError:
+                pass  # yard_id가 유효한 정수가 아닐 경우 필터를 적용하지 않습니다.
 
         # 장비 유형 필터링
         if types:
             selected_types = types.split(',')
             for eq_type in equipment_types:
                 if eq_type not in selected_types:
-                    equipments[eq_type + 's'] = models.QuerySet.none()
+                    equipments[eq_type + '_list'] = equipments[eq_type + '_list'].none()
+        else:
+            # 선택된 타입이 없으면 모든 타입을 선택한 것으로 간주
+            selected_types = equipment_types.copy()
 
-        # 컨텍스트에 추가
+        # 컨텍스트에 장비 리스트를 추가합니다.
         for eq_type in equipment_types:
-            context[eq_type + 's'] = equipments[eq_type + 's']
+            if eq_type == 'chassis':
+                context['chassis'] = equipments[eq_type + '_list']
+            else:
+                context[eq_type + 's'] = equipments[eq_type + '_list']
 
+        context['all_yards'] = all_yards
         context['yards'] = yards
+        context['selected_yard_id'] = int(yard_id) if yard_id else None
+        context['selected_types'] = selected_types
+        context['all_types_selected'] = (len(selected_types) == len(equipment_types))
+
+        # 구글 지도 API 키를 컨텍스트에 추가합니다.
+        context['google_maps_api_key'] = settings.GOOGLE_MAPS_API_KEY  # settings.py에서 API 키 가져오기
+
+        return context
+
+
+class YardDetailView(DetailView):
+    """야드 상세 보기 뷰"""
+    model = Yard
+    template_name = 'yms_edit/yard_detail.html'
+    context_object_name = 'yard'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # 구글 지도 API 키를 컨텍스트에 추가
+        context['google_maps_api_key'] = settings.GOOGLE_MAPS_API_KEY
         return context
 
 
@@ -89,6 +119,12 @@ class YardCreateView(CreateView):
     model = Yard
     form_class = YardCreateForm
     template_name = 'yms_edit/yard_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # 구글 지도 API 키를 컨텍스트에 추가
+        context['google_maps_api_key'] = settings.GOOGLE_MAPS_API_KEY
+        return context
 
     def form_valid(self, form):
         """
@@ -110,15 +146,6 @@ class YardCreateView(CreateView):
         return reverse_lazy('yms_edit:equipment-list')
 
 
-class YardDetailView(DetailView):
-    """
-    야드 상세 보기 뷰.
-    """
-    model = Yard
-    template_name = 'yms_edit/yard_detail.html'
-    context_object_name = 'yard'
-
-
 class YardUpdateView(UpdateView):
     """
     야드 수정 뷰.
@@ -126,6 +153,12 @@ class YardUpdateView(UpdateView):
     model = Yard
     form_class = YardCreateForm
     template_name = 'yms_edit/yard_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # 구글 지도 API 키를 컨텍스트에 추가
+        context['google_maps_api_key'] = settings.GOOGLE_MAPS_API_KEY
+        return context
 
     def form_valid(self, form):
         """

@@ -139,6 +139,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
+GOOGLE_MAPS_API_KEY = 'AIzaSyBbYuj8MhQKY-WSzDzQGWbF41EvebIYru8'
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
