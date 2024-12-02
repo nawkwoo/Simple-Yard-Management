@@ -38,7 +38,7 @@ class EquipmentAndYardListView(TemplateView):
                 yard_id_int = int(yard_id)
                 yards = yards.filter(id=yard_id_int)
                 for eq_type in equipment_types:
-                    equipments[eq_type + '_list'] = equipments[eq_type + '_list'].filter(site__yard_id=yard_id_int)
+                    equipments[eq_type + '_list'] = equipments[eq_type + '_list'].filter(site__yard__id=yard_id_int)
             except ValueError:
                 pass  # yard_id가 유효한 정수가 아닐 경우 필터를 적용하지 않습니다.
 
@@ -68,7 +68,7 @@ class EquipmentAndYardListView(TemplateView):
         context['google_maps_api_key'] = settings.GOOGLE_MAPS_API_KEY  # settings.py에서 API 키 가져오기
 
         return context
-    
+
 
 class YardDetailView(DetailView):
     """야드 상세 보기 뷰"""

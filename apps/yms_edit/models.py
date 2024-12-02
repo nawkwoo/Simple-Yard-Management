@@ -5,6 +5,10 @@ from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.fields import GenericRelation
 from apps.accounts.models import Driver  # accounts.Driver를 임포트
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+
+# 필요한 경우 다른 앱의 모델을 import
 
 # --- 공통 추상 모델 ---
 class BaseModel(models.Model):
@@ -128,9 +132,27 @@ class EquipmentBase(BaseModel):
         if self.site.is_full():
             raise ValidationError("해당 사이트는 이미 최대 수용량에 도달했습니다.")
 
+
+class Transaction(models.Model):
+    # equipment_type 필드는 이미 equipment를 통해 알 수 있으므로, 필요에 따라 제거 가능합니다.
+    equipment_type = models.CharField(max_length=50)
+    movement_time = models.DateTimeField(auto_now_add=True)
+    departure_yard = models.ForeignKey(Yard, related_name='departures', on_delete=models.CASCADE)
+    arrival_yard = models.ForeignKey(Yard, related_name='arrivals', on_delete=models.CASCADE)
+    details = models.TextField(blank=True, null=True)
+
+    # GenericForeignKey 설정
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    equipment = GenericForeignKey('content_type', 'object_id')
+
+    def __str__(self):
+        return f"{self.equipment_type} 이동 ({self.departure_yard} -> {self.arrival_yard})"
+
+
 class Truck(EquipmentBase):
     """트럭 모델"""
-    transactions = GenericRelation('yms_view.Transaction')
+    transactions = GenericRelation('Transaction')
     truck_id = models.CharField(
         max_length=4,
         unique=True,
@@ -142,7 +164,7 @@ class Truck(EquipmentBase):
 
 class Chassis(EquipmentBase):
     """샤시 모델"""
-    transactions = GenericRelation('yms_view.Transaction')
+    transactions = GenericRelation('Transaction')
     chassis_id = models.CharField(
         max_length=4,
         unique=True,
@@ -158,7 +180,7 @@ class Chassis(EquipmentBase):
 
 class Container(EquipmentBase):
     """컨테이너 모델"""
-    transactions = GenericRelation('yms_view.Transaction')
+    transactions = GenericRelation('Transaction')
     container_id = models.CharField(
         max_length=11,
         unique=True,
@@ -178,7 +200,7 @@ class Container(EquipmentBase):
 
 class Trailer(EquipmentBase):
     """트레일러 모델"""
-    transactions = GenericRelation('yms_view.Transaction')
+    transactions = GenericRelation('Transaction')
     trailer_id = models.CharField(
         max_length=10,
         unique=True,
