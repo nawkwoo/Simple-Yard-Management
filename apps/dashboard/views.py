@@ -1,6 +1,7 @@
 # apps/dashboard/views.py
 
 import csv
+from datetime import datetime
 from io import TextIOWrapper
 from django.shortcuts import render, redirect, reverse
 from django.contrib.auth.decorators import login_required
@@ -55,7 +56,7 @@ def upload_csv(request):
     if request.method == 'POST':
         form = CSVUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            csv_file = form.cleaned_data['file']
+            csv_file = form.cleaned_data['csv_file']
             if not csv_file.name.endswith('.csv'):
                 messages.error(request, "CSV 파일만 업로드할 수 있습니다.")
                 return redirect('dashboard:upload_csv')
@@ -107,33 +108,46 @@ def upload_csv(request):
                         if not departure_yard or not arrival_yard:
                             raise ValueError("출발위치 또는 도착위치가 유효하지 않습니다.")
 
-                        # 장비 객체 가져오기
-                        truck = Truck.objects.filter(serial_number=truck_id).first() if truck_id else None
-                        chassis = Chassis.objects.filter(serial_number=chassis_id).first() if chassis_id else None
-                        container = Container.objects.filter(serial_number=container_id).first() if container_id else None
-                        trailer = Trailer.objects.filter(serial_number=trailer_id).first() if trailer_id else None
+                        # 장비 객체 가져오기 --> 하기 코드에서는 dashboard_order 테이블에 정상적으로 truck, chassis, container, trailer 정보가 저장되지 않음
+                        #truck = Truck.objects.filter(serial_number=truck_id).first() if truck_id else None
+                        #chassis = Chassis.objects.filter(serial_number=chassis_id).first() if chassis_id else None
+                        #container = Container.objects.filter(serial_number=container_id).first() if container_id else None
+                        #trailer = Trailer.objects.filter(serial_number=trailer_id).first() if trailer_id else None
 
+                        truck = Truck.objects.filter(truck_id=truck_id).first() if truck_id else None
+                        chassis = Chassis.objects.filter(chassis_id=chassis_id).first() if chassis_id else None
+                        container = Container.objects.filter(container_id=container_id).first() if container_id else None
+                        trailer = Trailer.objects.filter(trailer_id=trailer_id).first() if trailer_id else None
                         # 시간 변환
+                        departure_time_str = f"{departure_time_str}:00"  # 초 추가  // exception 발생하여 datetime format 맞춤 (csv 파일에서는 초가 없음)
+                        arrival_time_str = f"{arrival_time_str}:00"  # 초 추가      // exception 발생하여 datetime format 맞춤 (csv 파일에서는 초가 없음)
                         departure_time = datetime.strptime(departure_time_str, '%Y-%m-%d %H:%M:%S')
                         arrival_time = datetime.strptime(arrival_time_str, '%Y-%m-%d %H:%M:%S')
 
+
+                        # Row 2: Cannot assign "<Driver: WGHGAC50 - hni>": "Order.driver" must be a "CustomUser" instance.
+                        # exception 발생하여 CustomUser 객체로 변환
+                        driver_instance = Driver.objects.get(driver_id=driver_id)
+                        driver = driver_instance.profile.user  # CustomUser 객체를 설정
+                        
                         # 주문 생성 및 처리
-                        with transaction.atomic():
-                            order = Order.objects.create(
+                        order = Order.objects.create(
                                 truck=truck,
                                 chassis=chassis,
                                 container=container,
                                 trailer=trailer,
                                 driver=driver,
-                                departure_time=departure_time,
-                                arrival_time=arrival_time,
+                                #departure_time=departure_time,
+                                #arrival_time=arrival_time,
+                                created_at=departure_time,
+                                updated_at=arrival_time,
                                 departure_yard=departure_yard,
                                 arrival_yard=arrival_yard,
                                 status=Order.STATUS_PENDING
                             )
 
-                            # 주문 처리 함수 호출
-                            process_order(order.id)
+                        # 주문 처리 함수 호출
+                        process_order(order.id)
 
                         success_count += 1
 

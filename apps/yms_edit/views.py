@@ -27,6 +27,20 @@ from apps.yms_view.utils import process_order
 from apps.dashboard.forms import CSVUploadForm
 
 
+from geopy.geocoders import Nominatim
+
+def get_lat_lon(address):
+    # Geolocator 생성
+    geolocator = Nominatim(user_agent="geoapi")
+    
+    # 주소를 위도, 경도로 변환
+    location = geolocator.geocode(address)
+    if location:
+        return location.latitude, location.longitude
+    else:
+        return None, None
+
+
 class EquipmentAndYardListView(TemplateView):
     """
     장비와 야드 목록을 보여주는 뷰.
@@ -118,6 +132,9 @@ class YardCreateView(CreateView):
     """
     model = Yard
     form_class = YardCreateForm
+    #address = "서울특별시 중구 세종대로 110"
+    #latitude, longitude = get_lat_lon(address)
+
     template_name = 'yms_edit/yard_form.html'
 
     def get_context_data(self, **kwargs):
@@ -228,7 +245,8 @@ class EquipmentDetailView(DetailView):
         # 트랜잭션 필터링: equipment_type과 equipment id를 기준으로 필터링
         transactions = Transaction.objects.filter(
             equipment_type=model,
-            equipment=equipment.id
+            truck_id=equipment.id  # 'truck_id' 또는 올바른 필드로 수정
+            #equipment=equipment.id
         ).order_by('-movement_time')
 
         context['transactions'] = transactions

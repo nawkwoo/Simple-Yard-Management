@@ -18,6 +18,15 @@ class Order(models.Model):
         (STATUS_COMPLETED, 'Completed'),
         (STATUS_FAILED, 'Failed'),
     ]
+    # Row 2: Cannot assign "<Driver: WGHGAC50 - hni>": "Order.driver" must be a "CustomUser" instance.
+    # drvier 가 CustomUser 참조하고 있음. 확인 필요
+    driver = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='orders',
+        help_text="주문을 처리할 운전자"
+    )
+    
 
     driver = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -25,6 +34,7 @@ class Order(models.Model):
         related_name='orders',
         help_text="주문을 처리할 운전자"
     )
+    
     truck = models.ForeignKey(
         Truck,
         on_delete=models.SET_NULL,

@@ -128,14 +128,31 @@
             background: rgba(86, 91, 97, 0.1);
             margin: 1rem 0;
         }
+
+        .errors {
+            color: red;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="logo-text">Yard Management System</div>
         <h1>회원가입</h1>
+
+        <!-- 메시지 출력 -->
+        {% if messages %}
+            <ul class="errors">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
         <form method="post" action="{% url 'accounts:signup' %}">
             {% csrf_token %}
+            
             <label for="user_type">회원 유형</label>
             <select name="user_type" id="user_type" required>
                 <option value="admin">관리자</option>
@@ -144,9 +161,15 @@
         
             <label for="username">사용자 이름</label>
             <input type="text" id="username" name="username" required placeholder="사용자 이름을 입력하세요">
+            {% if form.username.errors %}
+                <div class="errors">{{ form.username.errors }}</div>
+            {% endif %}
         
             <label for="password1">비밀번호</label>
             <input type="password" id="password1" name="password1" required placeholder="비밀번호를 입력하세요">
+            {% if form.password1.errors %}
+                <div class="errors">{{ form.password1.errors }}</div>
+            {% endif %}
         
             <label for="password2">비밀번호 확인</label>
             <input type="password" id="password2" name="password2" required placeholder="비밀번호를 다시 입력하세요">

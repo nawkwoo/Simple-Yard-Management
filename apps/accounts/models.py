@@ -3,7 +3,8 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.validators import RegexValidator
 from django.db import models
-
+import random
+import string
 
 class CustomUserManager(BaseUserManager):
     """
@@ -107,3 +108,18 @@ class Driver(models.Model):
 
     def __str__(self):
         return f"{self.driver_id} - {self.profile.user.username}"
+
+    def save(self, *args, **kwargs):
+        # driver_id가 비어 있는 경우 자동 생성
+        if not self.driver_id:
+            self.driver_id = self._generate_driver_id()
+        super().save(*args, **kwargs)
+
+    @staticmethod
+    def _generate_driver_id():
+        """
+        6개의 대문자와 2개의 숫자로 구성된 driver_id를 생성합니다.
+        """
+        letters = ''.join(random.choices(string.ascii_uppercase, k=6))  # 6개의 랜덤 대문자
+        digits = ''.join(random.choices(string.digits, k=2))           # 2개의 랜덤 숫자
+        return f"{letters}{digits}"

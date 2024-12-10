@@ -4,7 +4,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 
 from .models import CustomUser
-
+from .models import Profile, Driver
 
 class BaseSignUpForm(UserCreationForm):
     """
@@ -26,6 +26,31 @@ class BaseSignUpForm(UserCreationForm):
     class Meta:
         model = CustomUser
         fields = ['username', 'password1', 'password2', 'gender', 'birth_date', 'has_car']
+
+    def save(self, commit=True):
+        """
+        사용자와 연결된 Profile 데이터를 저장합니다.
+        """
+        user = super().save(commit=False)  # User 객체 생성 (DB에 저장하지 않음)
+
+        if commit:  # commit=True이면 DB에 저장
+            user.save()
+        
+        # Profile 객체 업데이트 또는 생성
+        profile, created = Profile.objects.update_or_create(
+            user=user,  # user를 기준으로 찾음
+            defaults={  # 업데이트할 필드들
+                'gender': self.cleaned_data['gender'],
+                'birth_date': self.cleaned_data['birth_date'],
+                'has_car': self.cleaned_data['has_car'],
+            }
+        )
+
+        # Profile 객체 업데이트 또는 생성
+        profile, created = Driver.objects.update_or_create(
+            profile=profile,  # user를 기준으로 찾음
+        )        
+        return user
 
 
 class AdminSignUpForm(BaseSignUpForm):
