@@ -128,7 +128,7 @@ def upload_csv(request):
                         # Row 2: Cannot assign "<Driver: WGHGAC50 - hni>": "Order.driver" must be a "CustomUser" instance.
                         # exception 발생하여 CustomUser 객체로 변환
                         driver_instance = Driver.objects.get(driver_id=driver_id)
-                        driver = driver_instance.profile.user  # CustomUser 객체를 설정
+                        driver = driver_instance
                         
                         # 주문 생성 및 처리
                         order = Order.objects.create(
@@ -137,10 +137,8 @@ def upload_csv(request):
                                 container=container,
                                 trailer=trailer,
                                 driver=driver,
-                                #departure_time=departure_time,
-                                #arrival_time=arrival_time,
-                                created_at=departure_time,
-                                updated_at=arrival_time,
+                                departure_time=departure_time,
+                                arrival_time=arrival_time,
                                 departure_yard=departure_yard,
                                 arrival_yard=arrival_yard,
                                 status=Order.STATUS_PENDING

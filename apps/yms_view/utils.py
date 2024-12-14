@@ -42,46 +42,52 @@ def process_order(order_id):
             if order.container and not order.chassis:
                 raise ValidationError("컨테이너는 샤시와 함께 사용해야 합니다.")
 
-            # 출발 야드에서 장비 확인
-            if equipment:
+            if order.truck:
+                truckObject = Truck.objects.get(serial_number=order.truck.serial_number)
                 inventory_item = YardInventory.objects.select_for_update().filter(
-                    yard=order.departure_yard,
-                    equipment_id=equipment.serial_number,
+                    yard_id=order.departure_yard.id,
+                    equipment_id=truckObject.id,
                     is_available=True
                 ).first()
 
                 if not inventory_item:
-                    raise ValidationError(f"{equipment.serial_number}이 출발 위치 야드에 없습니다.")
+                    raise ValidationError(f"Truck 시리얼넘버({equipment.serial_number})가 출발 위치 야드에 없습니다.")
 
-                # 출발 야드에서 장비 제거
-                inventory_item.is_available = False
-                inventory_item.save()
-
-                # 도착 야드에 장비 추가
-                YardInventory.objects.create(
-                    yard=order.arrival_yard,
-                    equipment_type=equipment.__class__.__name__,
-                    equipment_id=equipment.serial_number,
+            if order.chassis:
+                chassisObject = Chassis.objects.get(serial_number=order.chassis.serial_number)
+                inventory_item = YardInventory.objects.select_for_update().filter(
+                    yard_id=order.departure_yard.id,
+                    equipment_id=chassisObject.id,
                     is_available=True
-                )
+                ).first()
 
-            # 트랜잭션 생성
-            Transaction.objects.create(
-                equipment_type=equipment.__class__.__name__ if equipment else 'PersonalVehicle',
-                truck=equipment if isinstance(equipment, Truck) else None,
-                chassis=equipment if isinstance(equipment, Chassis) else None,
-                container=equipment if isinstance(equipment, Container) else None,
-                trailer=equipment if isinstance(equipment, Trailer) else None,
-                departure_yard=order.departure_yard,
-                arrival_yard=order.arrival_yard,
-                details=f"장비 {equipment.serial_number} 이동 완료." if equipment else "자가용 이동 완료.",
-                movement_time=timezone.now()
-            )
+                if not inventory_item:
+                    raise ValidationError(f"Chassis 시리얼넘버({equipment.serial_number})가 출발 위치 야드에 없습니다.")
+                
+            if order.container:
+                containerObject = Container.objects.get(serial_number=order.container.serial_number)
+                inventory_item = YardInventory.objects.select_for_update().filter(
+                    yard_id=order.departure_yard.id,
+                    equipment_id=containerObject.id,
+                    is_available=True
+                ).first()
 
-            # 주문 상태 업데이트
+                if not inventory_item:
+                    raise ValidationError(f"Container 시리얼넘버({equipment.serial_number})가 출발 위치 야드에 없습니다.")
+                
+            if order.trailer:
+                trailerObject = Trailer.objects.get(serial_number=order.trailer.serial_number)
+                inventory_item = YardInventory.objects.select_for_update().filter(
+                    yard_id=order.departure_yard.id,
+                    equipment_id=trailerObject.id,
+                    is_available=True
+                ).first()
+
+                if not inventory_item:
+                    raise ValidationError(f"Trailer 시리얼넘버({equipment.serial_number})가 출발 위치 야드에 없습니다.")
+
             order.status = "COMPLETED"
             order.error_message = None  # 오류 메시지 초기화
-
             logger.info(f"Order {order_id} processed successfully.")
 
     except Order.DoesNotExist:

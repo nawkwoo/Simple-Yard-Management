@@ -225,7 +225,7 @@
                         <div class="list-item">
                             <a href="{% url 'yms_edit:equipment-detail' model='truck' pk=truck.pk %}">
                                 <span class="list-icon">🚚</span> <!-- 트럭 아이콘 -->
-                                트럭: {{ truck.truck_id }} - {{ truck.serial_number }}
+                                트럭: {{ truck.truck_id }} - {{ truck.serial_number }} -  ({{ truck.is_active|yesno:"운송 가능,운송 불가" }})
                             </a>
                         </div>
                     {% endfor %}
@@ -235,7 +235,7 @@
                         <div class="list-item">
                             <a href="{% url 'yms_edit:equipment-detail' model='chassis' pk=chassis_item.pk %}">
                                 <span class="list-icon">🛞</span> <!-- 섀시 아이콘 -->
-                                섀시: {{ chassis_item.chassis_id }} - {{ chassis_item.serial_number }}
+                                섀시: {{ chassis_item.chassis_id }} - {{ chassis_item.serial_number }} -  ({{ chassis_item.is_active|yesno:"운송 가능,운송 불가" }})
                             </a>
                         </div>
                     {% endfor %}
@@ -245,7 +245,7 @@
                         <div class="list-item">
                             <a href="{% url 'yms_edit:equipment-detail' model='container' pk=container.pk %}">
                                 <span class="list-icon">📦</span> <!-- 컨테이너 아이콘 -->
-                                컨테이너: {{ container.container_id }} - {{ container.serial_number }}
+                                컨테이너: {{ container.container_id }} - {{ container.serial_number }} -  ({{ container.is_active|yesno:"운송 가능,운송 불가" }})
                             </a>
                         </div>
                     {% endfor %}
@@ -255,7 +255,7 @@
                         <div class="list-item">
                             <a href="{% url 'yms_edit:equipment-detail' model='trailer' pk=trailer.pk %}">
                                 <span class="list-icon">🚛</span> <!-- 트레일러 아이콘 -->
-                                트레일러: {{ trailer.trailer_id }} - {{ trailer.serial_number }}
+                                트레일러: {{ trailer.trailer_id }} - {{ trailer.serial_number }} -  ({{ trailer.is_active|yesno:"운송 가능,운송 불가" }})
                             </a>
                         </div>
                     {% endfor %}

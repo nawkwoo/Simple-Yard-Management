@@ -17,7 +17,7 @@ from django.db import transaction
 from django.http import Http404
 from django.conf import settings
 
-from .models import Yard, Site, Truck, Chassis, Container, Trailer
+from .models import Yard, Site, Truck, Chassis, Container, Trailer, YardInventory
 from .forms import (
     YardCreateForm, TruckForm, ChassisForm,
     ContainerForm, TrailerForm
@@ -66,10 +66,12 @@ class EquipmentAndYardListView(TemplateView):
         # 모든 장비를 가져옵니다.
         for eq_type in equipment_types:
             model_class = model_classes[eq_type]
-            equipments[eq_type + '_list'] = model_class.objects.filter(is_active=True)
+            equipments[eq_type + '_list'] = model_class.objects.all()
+            #equipments[eq_type + '_list'] = model_class.objects.filter(is_active=True)
 
         # 야드 및 필터 파라미터를 가져옵니다.
-        all_yards = Yard.objects.filter(is_active=True)
+        #all_yards = Yard.objects.filter(is_active=True)
+        all_yards = Yard.objects.all()
         yards = all_yards
 
         yard_id = self.request.GET.get('yard')
@@ -288,11 +290,21 @@ class EquipmentCreateView(CreateView):
         """
         폼이 유효할 때, 성공 메시지를 추가합니다.
         """
+        response = super().form_valid(form)
+        equipment = form.instance
+        # YardInventory 객체 생성
+        yard = Yard.objects.first()  # 기본 야드 선택 (변경 필요 시 로직 추가)
+        YardInventory.objects.create(
+            yard=yard,
+            equipment_type=self.kwargs.get('model').capitalize(),
+            equipment_id=equipment.id,  # Equipment의 ID 사용
+            is_available=equipment.is_active
+        )        
         messages.success(
             self.request,
             f"{self.kwargs.get('model').capitalize()} 장비가 성공적으로 추가되었습니다."
         )
-        return super().form_valid(form)
+        return response
 
     def get_success_url(self):
         return reverse_lazy('yms_edit:equipment-list')
@@ -348,11 +360,27 @@ class EquipmentUpdateView(UpdateView):
         """
         폼이 유효할 때, 성공 메시지를 추가합니다.
         """
+        response = super().form_valid(form)
+        equipment = form.instance
+
+        # YardInventory 업데이트 로직
+        try:
+            yard_inventory = YardInventory.objects.get(equipment_id=equipment.id)
+            yard_inventory.equipment_type = self.kwargs.get('model').capitalize()
+            yard_inventory.is_available = equipment.is_active
+            # 필요에 따라 추가 필드 업데이트 가능
+            yard_inventory.save()
+        except YardInventory.DoesNotExist:
+            messages.warning(
+                self.request,
+                "연결된 YardInventory가 없어 새로 생성이 필요합니다."
+            )
+
         messages.success(
             self.request,
             f"{self.kwargs.get('model').capitalize()} 장비가 성공적으로 수정되었습니다."
         )
-        return super().form_valid(form)
+        return response
 
     def get_success_url(self):
         return reverse_lazy('yms_edit:equipment-list')

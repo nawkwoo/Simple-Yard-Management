@@ -2,6 +2,7 @@
 
 from django.db import models
 from django.conf import settings
+from apps.accounts.models import Driver
 from apps.yms_edit.models import Yard, Truck, Chassis, Container, Trailer
 
 
@@ -20,17 +21,15 @@ class Order(models.Model):
     ]
     # Row 2: Cannot assign "<Driver: WGHGAC50 - hni>": "Order.driver" must be a "CustomUser" instance.
     # drvier 가 CustomUser 참조하고 있음. 확인 필요
+    #driver = models.ForeignKey(
+    #    settings.AUTH_USER_MODEL,
+    #    on_delete=models.CASCADE,
+    #    related_name='orders',
+    #    help_text="주문을 처리할 운전자"
+    #)
     driver = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='orders',
-        help_text="주문을 처리할 운전자"
-    )
-    
-
-    driver = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        Driver,
+        on_delete=models.PROTECT,
         related_name='orders',
         help_text="주문을 처리할 운전자"
     )
@@ -93,6 +92,8 @@ class Order(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True, help_text="주문 생성 시간")
     updated_at = models.DateTimeField(auto_now=True, help_text="주문 수정 시간")
+    departure_time = models.DateTimeField(auto_now=False, help_text="출발 시간")
+    arrival_time = models.DateTimeField(auto_now=False, help_text="도착시간 시간")
 
     class Meta:
         ordering = ['-created_at']

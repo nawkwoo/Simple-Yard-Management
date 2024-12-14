@@ -90,6 +90,7 @@ class YardInventory(models.Model):
         related_name="inventory",
         help_text="장비가 속한 야드"
     )
+    
     equipment_type = models.CharField(max_length=10, help_text="장비의 유형 (Truck, Chassis, etc.)")
     equipment_id = models.CharField(
         max_length=15,

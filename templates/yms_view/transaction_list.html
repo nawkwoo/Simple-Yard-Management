@@ -519,3 +519,11 @@
     </script>
 </body>
 </html>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 페이지 로드 후 5분마다 새로 고침
+        setInterval(function() {
+            location.reload();  // 페이지 새로 고침
+        }, 5000);  // 300,000ms = 5분
+    });
+</script>
