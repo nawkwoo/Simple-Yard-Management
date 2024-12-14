@@ -14,10 +14,20 @@ class Order(models.Model):
     STATUS_COMPLETED = 'COMPLETED'
     STATUS_FAILED = 'FAILED'
 
+    MOVE_STATUS_PENDING = "PENDING"
+    MOVE_STATUS_DEPARTURED = "DEPARTURED"
+    MOVE_STATUS_ARRIVED = "ARRIVED"
+
     STATUS_CHOICES = [
         (STATUS_PENDING, 'Pending'),
         (STATUS_COMPLETED, 'Completed'),
         (STATUS_FAILED, 'Failed'),
+    ]
+
+    STATUS_MOVE_CHOICES = [
+        (MOVE_STATUS_PENDING, 'Pending'),
+        (MOVE_STATUS_DEPARTURED, 'Departured'),
+        (MOVE_STATUS_ARRIVED, 'Arrived'),
     ]
     # Row 2: Cannot assign "<Driver: WGHGAC50 - hni>": "Order.driver" must be a "CustomUser" instance.
     # drvier 가 CustomUser 참조하고 있음. 확인 필요
@@ -82,8 +92,16 @@ class Order(models.Model):
         max_length=10,
         choices=STATUS_CHOICES,
         default=STATUS_PENDING,
+        help_text="이동 상태"
+    )
+    
+    status_move = models.CharField(
+        max_length=10,
+        choices=STATUS_MOVE_CHOICES,
+        default=MOVE_STATUS_PENDING,
         help_text="주문의 상태"
     )
+
     error_message = models.TextField(
         blank=True,
         null=True,

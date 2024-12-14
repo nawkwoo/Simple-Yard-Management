@@ -2,6 +2,7 @@
 
 from django.db import models
 from django.core.exceptions import ValidationError
+from apps.dashboard.models import Order
 from apps.yms_edit.models import Yard, Truck, Chassis, Container, Trailer
 
 
@@ -22,6 +23,7 @@ class Transaction(models.Model):
         choices=EQUIPMENT_TYPE_CHOICES,
         help_text="장비 유형"
     )
+
     truck = models.ForeignKey(
         Truck,
         on_delete=models.SET_NULL,
@@ -65,6 +67,13 @@ class Transaction(models.Model):
         on_delete=models.PROTECT,
         related_name="transactions_arrived",
         help_text="도착 야드"
+    )
+    #order_id = models.IntegerField(default=0)  # 기본값 설정
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.PROTECT,
+        related_name="transactions_order",
+        help_text="주문 ID"
     )
     movement_time = models.DateTimeField(
         auto_now_add=True,

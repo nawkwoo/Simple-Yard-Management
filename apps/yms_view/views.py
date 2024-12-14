@@ -20,7 +20,7 @@ class TransactionListView(LoginRequiredMixin, ListView):
     트랜잭션 기록 및 선택된 야드의 장비 정보를 출력하는 뷰.
     """
     model = Transaction
-    template_name = "yms_view/transaction_list.html"
+    template_name = "yms_view/yard_view.html"
     context_object_name = "transactions"
     ordering = ["-movement_time"]
 
@@ -149,7 +149,7 @@ class MoveEquipmentView(LoginRequiredMixin, View):
         """
         yards = Yard.objects.all()
         form = MoveEquipmentForm()
-        return render(request, 'yms_view/move_equipment.html', {'yards': yards, 'form': form})
+        return render(request, 'yms_view/yard_view.html', {'yards': yards, 'form': form})
 
     def post(self, request, *args, **kwargs):
         """

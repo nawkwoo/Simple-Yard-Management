@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yard View</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            background: #f5f5f5;
+            height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            width: 100%; 
+        }
+
+        .yard-layout {
+            flex: 1;
+            position: relative;
+            border: 2px solid #ccc;
+            margin: 10px 0;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            min-height: 500px; /* 최소 높이 설정 */
+            border-radius: 8px;
+        }
+
+        .top-nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 10px;
+            background: white;
+            border: 1px solid #ddd;
+            height: 30px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+
+        .top-nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 10px;
+            background: white;
+            border: 1px solid #ddd;
+            height: 30px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 6px;
+        }
+
+        .nav-select {
+            padding: 3px 15px;
+            border: 1px solid #ccc;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .timeline {
+            margin-right: auto;
+            margin-left: 20px;
+            padding: 3px;
+            border: 1px solid #ddd;
+            font-size: 11px;
+            width: 400px;
+            height: 30px;
+            overflow-y: scroll;
+            position: relative;
+            border-radius: 4px;
+        }
+
+        .timeline div {
+            padding: 3px 5px;
+            white-space: nowrap;
+        }
+
+        .expand-button {
+            position: absolute;
+            right: 5px;
+            bottom: 5px;
+            width: 16px;
+            height: 16px;
+            background: #808080;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .yard-layout {
+            flex: 1;
+            position: relative;
+            border: 2px solid #ccc;
+            margin: 10px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .left-area {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            bottom: 20px;
+            width: calc(50% - 40px);
+            border: 2px solid #ccc;
+            border-radius: 8px;
+        }
+
+        .right-area {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            bottom: 20px;
+            width: calc(50% - 40px);
+            border-radius: 8px;
+        }
+
+        .container-area {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 100%;
+            height: 200px;
+            border: 2px solid #ccc;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 1px;
+            background: #f5f5f5;
+            padding: 1px;
+            border-radius: 6px;
+        }
+
+        .bottom-sectors {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            gap: 20px;
+        }
+
+        .trailer-area {
+            width: 30%;
+            height: 100px;
+            border: 2px solid #ccc;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 1px;
+            background: #f5f5f5;
+            padding: 1px;
+            position: relative;
+            border-radius: 6px;
+        }
+
+        .chassis-area {
+            flex-grow: 1;
+            height: 100px;
+            border: 2px solid #ccc;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 1px;
+            background: #f5f5f5;
+            padding: 1px;
+            position: relative;
+            border-radius: 6px;
+        }
+
+        .grid-cell {
+            background: #e1e2e3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+            font-size: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .grid-cell.occupied {
+            background: #496480;
+            color: white;
+        }
+
+        .sector-title {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+            background: white;
+            padding: 2px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            z-index: 1;
+        }
+
+        /* 주차 공간 전체를 감싸는 영역 */
+        .parking-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 90%;
+            height: 95%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+        }
+
+        /* 상단/하단 행 스타일 */
+        .parking-row {
+            display: flex;
+            justify-content: space-between;
+            height: 30%;
+        }
+
+        /* 상단 행은 위쪽에 정렬 */
+        .parking-row:first-child {
+            align-items: flex-start;
+        }
+
+        /* 하단 행은 아래쪽에 정렬 */
+        .parking-row:last-child {
+            align-items: flex-end;
+        }
+
+        /* 세로 방향 주차 공간 열 */
+        .parking-column {
+            display: flex;
+            flex-direction: column;
+            width: 70px;
+        }
+
+        /* 가로 방향 주차 공간 열 (중앙 부분) */
+        .parking-column2 {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            margin: 0 auto;  /* 중앙 정렬 */
+        }
+
+        /* 세로 방향 주차 공간 */
+        .parking-space {
+            width: 60px;
+            height: 40px;
+            background: #e1e2e3;
+            border: 2px solid #ccc;
+            margin: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+            font-size: 14px;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+            border-radius: 4px;
+        }
+
+        /* 가로 방향 주차 공간 */
+        .parking-space2 {
+            width: 40px;
+            height: 60px;
+            background: #e1e2e3;
+            border: 2px solid #ccc;
+            margin: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+            font-size: 14px;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+            border-radius: 4px;
+        }
+
+        /* 점유된 주차 공간 스타일 */
+        .parking-space.occupied, .parking-space2.occupied {
+            background: #496480;
+            color: white;
+        }
+
+
+        .timeline div {
+            padding: 3px 5px;
+            white-space: nowrap;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .timeline div:hover {
+            text-decoration: underline;
+            color: #1a73e8;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            min-width: 400px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .modal-body {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 15px;
+        }
+
+        .equipment-image {
+            width: 150px;
+            height: 150px;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+        }
+
+        .equipment-details {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .info-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            min-width: 100px;
+        }
+
+        .timeline-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .timeline-modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            width: 600px;
+            max-height: 80vh;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .timeline-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .timeline-modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .timeline-close-btn {
+            cursor: pointer;
+            font-size: 20px;
+            color: #666;
+        }
+
+        .timeline-list {
+            max-height: calc(80vh - 100px);
+            overflow-y: auto;
+        }
+
+        .timeline-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .timeline-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+
+        .timeline-time {
+            color: #666;
+            font-size: 14px;
+            min-width: 80px;
+        }
+
+        .timeline-equipment {
+            font-weight: bold;
+            color: #333;
+            min-width: 100px;
+        }
+
+        .timeline-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .timeline-status.in {
+            background-color: #7BC47F;
+            color: white;
+        }
+
+        .timeline-status.out {
+            background-color: #F77066;
+            color: white;
+        }
+
+        .timeline-user {
+            color: #666;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .current-time {
+            font-family: -apple-system;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            padding: 5px 10px;
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+        .date-picker {
+            font-family: -apple-system;
+            font-size: 14px;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            color: #666;
+            cursor: pointer;
+            background: #f8f8f8;
+        }
+
+        .date-picker::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+        }
+                .grid-cell.occupied {
+            background: #496480;
+            cursor: pointer;
+        }
+        
+        /* Add styles for equipment details */
+        .equipment-type {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .equipment-id {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .info-label {
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .info-value {
+            color: #333;
+        }
+        .equipment-type {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .equipment-id {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .info-label {
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .info-value {
+            color: #333;
+        }
+
+    </style>
+
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="top-nav">
+                <select class="nav-select" id="division-select" onchange="updateYards()">
+                    <option value="LA" selected>LA</option>
+                    <option value="PHX">PHX</option>
+                    <option value="HOU">HOU</option>
+                    <option value="SAV">SAV</option>
+                    <option value="MOB">MOB</option>
+                </select>
+                <select class="nav-select" id="yard-select">
+                    <option value="LA00" selected>LA00</option>
+                    <option value="LA01">LA01</option>
+                    <option value="LA02">LA02</option>
+                </select>
+                <div class="timeline">
+                    <div>20:17 / AAAA00 / IN / JASON</div>
+                    <div>17:13 / AAAD48/ OUT / PANWOO</div>
+                    <div>15:10 / AABC07 / IN / MIKE</div>
+                    <div>14:05 / ABCD10 / OUT / JOHN</div>
+                    <div>13:00 / BCDD32 / IN / SARAH</div>
+                    <button class="expand-button">+</button>
+                </div>
+                <input type="date" id="date-picker" class="date-picker">
+                <div id="current-time" class="current-time"></div>
+            </div>
+    
+            <div class="yard-layout">
+                <div class="left-area">
+                    <div class="sector-title">TRUCK (<span class="total">30</span>/<span class="occupied-count">0</span>)</div>
+                    <div class="parking-area">
+                        <div class="parking-row">
+                            <div class="parking-column">
+                                <div class="parking-space"></div>
+                                <div class="parking-space"></div>
+                                <div class="parking-space"></div>
+                                <div class="parking-space"></div>
+                                <div class="parking-space"></div>
+                            </div>
+                            <div class="parking-column2">
+                                <div class="parking-space2"></div>
+                                <div class="parking-space2"></div>
+                                <div class="parking-space2"></div>
+                                <div class="parking-space2"></div>
+                                <div class="parking-space2"></div>
+                            </div>
+                            <div class="parking-column">
+                                <div class="parking-space"></div>
+                                <div class="parking-space"></div>
+                                <div class="parking-space"></div>
+                                <div class="parking-space"></div>
+                                <div class="parking-space"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="parking-row">
+                            <div class="parking-column">
+                                <div class="parking-space"></div>
+                                <div class="parking-space"></div>
+                                <div class="parking-space"></div>
+                                <div class="parking-space"></div>
+                                <div class="parking-space"></div>
+                            </div>
+                            <div class="parking-column2">
+                                <div class="parking-space2"></div>
+                                <div class="parking-space2"></div>
+                                <div class="parking-space2"></div>
+                                <div class="parking-space2"></div>
+                                <div class="parking-space2"></div>
+                            </div>
+                            <div class="parking-column">
+                                <div class="parking-space"></div>
+                                <div class="parking-space"></div>
+                                <div class="parking-space"></div>
+                                <div class="parking-space"></div>
+                                <div class="parking-space"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="right-area">
+                    <div class="container-area">
+                        <div class="sector-title">CONTAINER (<span class="total">40</span>/<span class="occupied-count">0</span>)</div>
+                    </div>
+                    <div class="bottom-sectors">
+                        <div class="trailer-area">
+                            <div class="sector-title">TRAILER (<span class="total">10</span>/<span class="occupied-count">0</span>)</div>
+                        </div>
+                        <div class="chassis-area">
+                            <div class="sector-title">CHASSIS (<span class="total">20</span>/<span class="occupied-count">0</span>)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const yardOptions = {
+            LA: ["LA00", "LA01", "LA02"],
+            PHX: ["PHX00", "PHX01", "PHX02"],
+            HOU: ["HOU00", "HOU01", "HOU02"],
+            SAV: ["SAV00", "SAV01", "SAV02"],
+            MOB: ["MOB00", "MOB01", "MOB02"]
+        };
+    
+        function updateYards() {
+            const division = document.getElementById("division-select").value;
+            const yardSelect = document.getElementById("yard-select");
+            yardSelect.innerHTML = "";
+            yardOptions[division].forEach(yard => {
+                const option = document.createElement("option");
+                option.value = yard;
+                option.textContent = yard;
+                yardSelect.appendChild(option);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            function generateCells(containerSelector, count) {
+                const container = document.querySelector(containerSelector);
+                let occupiedCount = 0;
+                
+                const titleSpan = container.querySelector('.sector-title .occupied-count');
+                
+                for (let i = 1; i <= count; i++) {
+                    const cell = document.createElement('div');
+                    const isOccupied = Math.random() > 0.5;
+                    if (isOccupied) {
+                        cell.className = 'grid-cell occupied';
+                        occupiedCount++;
+                    } else {
+                        cell.className = 'grid-cell';
+                    }
+                    cell.textContent = i;
+                    container.appendChild(cell);
+                }
+                
+                if (titleSpan) {
+                    titleSpan.textContent = occupiedCount;
+                }
+            }
+            function generateParking() {
+                let occupiedCount = 0;
+                const verticalSpaces = document.querySelectorAll('.parking-column .parking-space');
+                const horizontalSpaces = document.querySelectorAll('.parking-column2 .parking-space2');
+                const titleSpan = document.querySelector('.left-area .sector-title .occupied-count');
+                
+                // 왼쪽 상단 세로열: 1-5 (아래에서 위로)
+                const leftTopSpaces = Array.from(verticalSpaces).slice(0, 5);
+                leftTopSpaces.forEach((space, index) => {
+                    const number = 5 - index;  // 5부터 1까지
+                    space.textContent = number;
+                    const isOccupied = Math.random() > 0.5;
+                    if (isOccupied) {
+                        space.classList.add('occupied');
+                        occupiedCount++;
+                    }
+                });
+                
+                // 상단 가로열: 6-10 (왼쪽에서 오른쪽으로)
+                const topSpaces = Array.from(horizontalSpaces).slice(0, 5);
+                topSpaces.forEach((space, index) => {
+                    const number = index + 6;  // 6부터 10까지
+                    space.textContent = number;
+                    const isOccupied = Math.random() > 0.5;
+                    if (isOccupied) {
+                        space.classList.add('occupied');
+                        occupiedCount++;
+                    }
+                });
+                
+                // 오른쪽 상단 세로열: 11-15 (위에서 아래로)
+                const rightTopSpaces = Array.from(verticalSpaces).slice(5, 10);
+                rightTopSpaces.forEach((space, index) => {
+                    const number = index + 11;  // 11부터 15까지
+                    space.textContent = number;
+                    const isOccupied = Math.random() > 0.5;
+                    if (isOccupied) {
+                        space.classList.add('occupied');
+                        occupiedCount++;
+                    }
+                });
+                
+                // 오른쪽 하단 세로열: 26-30 (아래에서 위로)
+                const rightBottomSpaces = Array.from(verticalSpaces).slice(15);  // slice(15)로 수정
+                rightBottomSpaces.forEach((space, index) => {
+                    const number = index + 16;  // 30부터 26까지
+                    space.textContent = number;
+                    const isOccupied = Math.random() > 0.5;
+                    if (isOccupied) {
+                        space.classList.add('occupied');
+                        occupiedCount++;
+                    }
+                });
+                
+                // 하단 가로열: 21-25 (오른쪽에서 왼쪽으로)
+                const bottomSpaces = Array.from(horizontalSpaces).slice(5);
+                bottomSpaces.forEach((space, index) => {
+                    const number = 25 - index;  // 25부터 21까지
+                    space.textContent = number;
+                    const isOccupied = Math.random() > 0.5;
+                    if (isOccupied) {
+                        space.classList.add('occupied');
+                        occupiedCount++;
+                    }
+                });
+                
+                // 왼쪽 하단 세로열: 26-30 (아래에서 위로)
+                // 왼쪽 하단 세로열: 16-20 (위에서 아래로)
+                const leftBottomSpaces = Array.from(verticalSpaces).slice(10, 15);  // slice(10, 15)로 수정
+                leftBottomSpaces.forEach((space, index) => {
+                    const number = 30 - index;  // 16부터 20까지
+                    space.textContent = number;
+                    const isOccupied = Math.random() > 0.5;
+                    if (isOccupied) {
+                        space.classList.add('occupied');
+                        occupiedCount++;
+                    }
+                });
+                
+                if (titleSpan) {
+                    titleSpan.textContent = occupiedCount;
+                }
+                }
+
+            generateCells('.container-area', 40);
+            generateCells('.trailer-area', 10);
+            generateCells('.chassis-area', 20);
+            generateParking();
+        });
+
+        /* JavaScript에 추가할 코드 */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Timeline 클릭 이벤트 추가
+            const timelineItems = document.querySelectorAll('.timeline div');
+            const modal = document.getElementById('equipmentModal');
+            const modalContent = document.getElementById('modalContent');
+            
+            timelineItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const [time, id, status, user] = item.textContent.split(' / ');
+                    
+                    // 모달 내용 업데이트
+                    modalContent.innerHTML = `
+                        <div class="modal-body">
+                            <div class="equipment-image">
+                                Equipment Image
+                            </div>
+                            <div class="equipment-details">
+                                <div class="info-row">
+                                    <span class="info-label">Equipment ID:</span>
+                                    <span>${id}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Status:</span>
+                                    <span>${status}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Time:</span>
+                                    <span>${time}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Driver:</span>
+                                    <span>${user}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Type:</span>
+                                    <span>${getEquipmentType(id)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    modal.style.display = 'block';
+                });
+            });
+            
+            // 모달 닫기 기능
+            const closeBtn = document.querySelector('.close-btn');
+            closeBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+            
+            window.addEventListener('click', (event) => {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // 장비 타입 판별 함수 (예시)
+            function getEquipmentType(id) {
+                const prefix = id.substring(0, 2);
+                switch(prefix) {
+                    case 'AA':
+                        return 'Container';
+                    case 'AB':
+                        return 'Trailer';
+                    case 'BC':
+                        return 'Chassis';
+                    default:
+                        return 'Unknown';
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Timeline expand button functionality
+            const expandButton = document.querySelector('.expand-button');
+            const timelineModal = document.getElementById('timelineModal');
+            const timelineModalTitle = document.querySelector('.timeline-modal-title');
+            const timelineList = document.querySelector('.timeline-list');
+            const timelineCloseBtn = document.querySelector('.timeline-close-btn');
+
+            // Timeline data (you can replace this with your actual data)
+            const timelineData = [
+                { time: "20:17", equipment: "AAAA00", status: "IN", user: "JASON" },
+                { time: "17:13", equipment: "AAAD48", status: "OUT", user: "PANWOO" },
+                { time: "15:10", equipment: "AABC07", status: "IN", user: "MIKE" },
+                { time: "14:05", equipment: "ABCD10", status: "OUT", user: "JOHN" },
+                { time: "13:00", equipment: "BCDD32", status: "IN", user: "SARAH" },
+                { time: "12:30", equipment: "AAFF23", status: "OUT", user: "EMMA" },
+                { time: "11:45", equipment: "BBCC45", status: "IN", user: "ALEX" },
+                { time: "10:20", equipment: "CCDD67", status: "OUT", user: "DAVID" },
+                { time: "09:15", equipment: "DDEE89", status: "IN", user: "LISA" },
+                { time: "08:00", equipment: "EEFF12", status: "OUT", user: "MARK" }
+            ];
+
+            expandButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const yardId = document.getElementById('yard-select').value;
+                timelineModalTitle.textContent = `${yardId} TIMELINE`;
+                
+                // Clear existing timeline items
+                timelineList.innerHTML = '';
+                
+                // Add timeline items
+                timelineData.forEach(item => {
+                    const timelineItem = document.createElement('div');
+                    timelineItem.className = 'timeline-item';
+                    timelineItem.innerHTML = `
+                        <span class="timeline-time">${item.time}</span>
+                        <span class="timeline-equipment">${item.equipment}</span>
+                        <span class="timeline-status ${item.status.toLowerCase()}">${item.status}</span>
+                        <span class="timeline-user">${item.user}</span>
+                    `;
+                    
+                    // Add click event to show equipment modal
+                    timelineItem.addEventListener('click', () => {
+                        timelineModal.style.display = 'none';
+                        
+                        // Show equipment modal
+                        const equipmentModal = document.getElementById('equipmentModal');
+                        const modalContent = document.getElementById('modalContent');
+                        
+                        modalContent.innerHTML = `
+                            <div class="modal-body">
+                                <div class="equipment-image">
+                                    Equipment Image
+                                </div>
+                                <div class="equipment-details">
+                                    <div class="info-row">
+                                        <span class="info-label">Equipment ID:</span>
+                                        <span>${item.equipment}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Status:</span>
+                                        <span>${item.status}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Time:</span>
+                                        <span>${item.time}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Driver:</span>
+                                        <span>${item.user}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Type:</span>
+                                        <span>${getEquipmentType(item.equipment)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        equipmentModal.style.display = 'block';
+                    });
+                    
+                    timelineList.appendChild(timelineItem);
+                });
+                
+                timelineModal.style.display = 'block';
+            });
+
+            // Close modal when clicking close button or outside
+            timelineCloseBtn.addEventListener('click', () => {
+                timelineModal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target == timelineModal) {
+                    timelineModal.style.display = 'none';
+                }
+            });
+
+            function updateTime() {
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                document.getElementById('current-time').textContent = `${hours}:${minutes}:${seconds}`;
+            }
+
+            // 초기 시간 설정
+            updateTime();
+    
+            // 1초마다 시간 업데이트
+            setInterval(updateTime, 1000);
+        });
+
+        const datePicker = document.getElementById('date-picker');
+        const currentTime = document.getElementById('current-time');
+    
+        // 오늘 날짜를 가져오는 함수
+        function getTodayDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // 초기 설정: 오늘 날짜를 기본값으로 설정하고 max 속성 설정
+        const today = getTodayDate();
+        datePicker.value = today;
+        datePicker.max = today; // 미래 날짜 선택 제한
+    
+        // 날짜 변경 이벤트
+        datePicker.addEventListener('change', function() {
+            const selectedDate = new Date(this.value + 'T00:00:00'); // 시간을 00:00:00으로 통일
+            const today = new Date(getTodayDate() + 'T00:00:00'); // 시간을 00:00:00으로 통일
+            
+            if (selectedDate.getTime() === today.getTime()) {
+                currentTime.style.display = 'block';
+                updateTime();
+            } else {
+                currentTime.style.display = 'none';
+            }
+        });
+    
+        // 시간 업데이트 함수
+        function updateTime() {
+            const selectedDate = new Date(datePicker.value + 'T00:00:00');
+            const today = new Date(getTodayDate() + 'T00:00:00');
+            
+            if (selectedDate.getTime() === today.getTime()) {
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                currentTime.textContent = `${hours}:${minutes}:${seconds}`;
+            }
+        }
+
+    // 초기 시간 설정 및 업데이트
+    updateTime();
+    const timeInterval = setInterval(updateTime, 1000);
+
+    function generateCells(containerSelector, count) {
+            const container = document.querySelector(containerSelector);
+            let occupiedCount = 0;
+            
+            const titleSpan = container.querySelector('.sector-title .occupied-count');
+            
+            // Equipment type specific data
+            const containerData = {
+                ids: ['ABCU1234567', 'BICU7654321', 'CMAU2468135'],
+                sizes: ['40ST', '40HC', '20ST', '45HC'],
+                types: ['DRY', 'REEFER', 'FLAT RACK', 'ISO TANK', 'OPEN TOP', 'TRI DOOR']
+            };
+            
+            const trailerData = {
+                ids: ['TRLU123456', 'TRAU654321', 'TRBU246813'],
+                sizes: ["53'", "48'"]
+            };
+            
+            const chassisData = {
+                ids: ['CHSS', 'CHSA', 'CHSB'],
+                types: ['Regular', 'Light', 'Tandem', 'Tri Axle']
+            };
+            
+            function getRandomElement(array) {
+                return array[Math.floor(Math.random() * array.length)];
+            }
+            
+            for (let i = 1; i <= count; i++) {
+                const cell = document.createElement('div');
+                const isOccupied = Math.random() > 0.5;
+                if (isOccupied) {
+                    cell.className = 'grid-cell occupied';
+                    occupiedCount++;
+                    
+                    // Add click event and equipment data
+                    cell.addEventListener('click', () => {
+                        const equipmentModal = document.getElementById('equipmentModal');
+                        const modalContent = document.getElementById('modalContent');
+                        
+                        let modalHTML = '<div class="modal-body">';
+                        
+                        if (containerSelector.includes('container')) {
+                            const id = getRandomElement(containerData.ids);
+                            modalHTML += `
+                                <h3>Container Information</h3>
+                                <div class="info-grid">
+                                    <span class="info-label">Location:</span>
+                                    <span class="info-value">Position ${i}</span>
+                                    <span class="info-label">ID:</span>
+                                    <span class="info-value">${id}</span>
+                                    <span class="info-label">Size:</span>
+                                    <span class="info-value">${getRandomElement(containerData.sizes)}</span>
+                                    <span class="info-label">Type:</span>
+                                    <span class="info-value">${getRandomElement(containerData.types)}</span>
+                                </div>
+                            `;
+                        } else if (containerSelector.includes('trailer')) {
+                            const id = getRandomElement(trailerData.ids);
+                            modalHTML += `
+                                <h3>Trailer Information</h3>
+                                <div class="info-grid">
+                                    <span class="info-label">Location:</span>
+                                    <span class="info-value">Position ${i}</span>
+                                    <span class="info-label">ID:</span>
+                                    <span class="info-value">${id}</span>
+                                    <span class="info-label">Size:</span>
+                                    <span class="info-value">${getRandomElement(trailerData.sizes)}</span>
+                                </div>
+                            `;
+                        } else if (containerSelector.includes('chassis')) {
+                            const id = getRandomElement(chassisData.ids);
+                            modalHTML += `
+                                <h3>Chassis Information</h3>
+                                <div class="info-grid">
+                                    <span class="info-label">Location:</span>
+                                    <span class="info-value">Position ${i}</span>
+                                    <span class="info-label">ID:</span>
+                                    <span class="info-value">${id}</span>
+                                    <span class="info-label">Type:</span>
+                                    <span class="info-value">${getRandomElement(chassisData.types)}</span>
+                                </div>
+                            `;
+                        }
+                        
+                        modalHTML += '</div>';
+                        modalContent.innerHTML = modalHTML;
+                        equipmentModal.style.display = 'block';
+                    });
+                } else {
+                    cell.className = 'grid-cell';
+                }
+                cell.textContent = i;
+                container.appendChild(cell);
+            }
+            
+            if (titleSpan) {
+                titleSpan.textContent = occupiedCount;
+            }
+        }
+    document.addEventListener('DOMContentLoaded', function() {
+    function generateCells(containerSelector, count) {
+        const container = document.querySelector(containerSelector);
+        let occupiedCount = 0;
+        
+        // Store the sector title before clearing
+        const sectorTitle = container.querySelector('.sector-title');
+        const titleSpan = sectorTitle.querySelector('.occupied-count');
+        
+        // Clear container content except the sector title
+        while (container.lastChild) {
+            if (container.lastChild === sectorTitle) {
+                break;
+            }
+            container.removeChild(container.lastChild);
+        }
+        
+        const containerData = {
+            ids: ['ABCU1234567', 'BICU7654321', 'CMAU2468135', 'TEMU1234567', 'MSCU7654321'],
+            sizes: ['40ST', '40HC', '20ST', '45HC'],
+            types: ['DRY', 'REEFER', 'FLAT RACK', 'ISO TANK', 'OPEN TOP', 'TRI DOOR']
+        };
+        
+        const trailerData = {
+            ids: ['TRLU123456', 'TRAU654321', 'TRBU246813', 'TRCU123456', 'TRDU654321'],
+            sizes: ["53'", "48'"]
+        };
+        
+        const chassisData = {
+            ids: ['CHSS', 'CHSA', 'CHSB', 'CHSC', 'CHSD'],
+            types: ['Regular', 'Light', 'Tandem', 'Tri Axle']
+        };
+        
+        function getRandomElement(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+        
+        for (let i = 1; i <= count; i++) {
+            const cell = document.createElement('div');
+            const isOccupied = Math.random() > 0.5;
+            
+            if (isOccupied) {
+                cell.className = 'grid-cell occupied';
+                occupiedCount++;
+                
+                cell.addEventListener('click', function() {
+                    const modal = document.getElementById('equipmentModal');
+                    const modalContent = document.getElementById('modalContent');
+                    const selectedYard = document.getElementById('yard-select').value;
+                    
+                    let content = '<div class="modal-body">';
+                    
+                    if (containerSelector.includes('container')) {
+                        const id = getRandomElement(containerData.ids);
+                        content += `
+                            <h3>Container Information</h3>
+                            <div class="info-grid">
+                                <span class="info-label">Location:</span>
+                                <span class="info-value">${selectedYard}/${i.toString().padStart(2, '0')}</span>
+                                <span class="info-label">ID:</span>
+                                <span class="info-value">${id}</span>
+                                <span class="info-label">Size:</span>
+                                <span class="info-value">${getRandomElement(containerData.sizes)}</span>
+                                <span class="info-label">Type:</span>
+                                <span class="info-value">${getRandomElement(containerData.types)}</span>
+                            </div>
+                        `;
+                    } else if (containerSelector.includes('trailer')) {
+                        const id = getRandomElement(trailerData.ids);
+                        content += `
+                            <h3>Trailer Information</h3>
+                            <div class="info-grid">
+                                <span class="info-label">Location:</span>
+                                <span class="info-value">${selectedYard}/${i.toString().padStart(2, '0')}</span>
+                                <span class="info-label">ID:</span>
+                                <span class="info-value">${id}</span>
+                                <span class="info-label">Size:</span>
+                                <span class="info-value">${getRandomElement(trailerData.sizes)}</span>
+                            </div>
+                        `;
+                    } else if (containerSelector.includes('chassis')) {
+                        const id = getRandomElement(chassisData.ids);
+                        content += `
+                            <h3>Chassis Information</h3>
+                            <div class="info-grid">
+                                <span class="info-label">Location:</span>
+                                <span class="info-value">${selectedYard}/${i.toString().padStart(2, '0')}</span>
+                                <span class="info-label">ID:</span>
+                                <span class="info-value">${id}</span>
+                                <span class="info-label">Type:</span>
+                                <span class="info-value">${getRandomElement(chassisData.types)}</span>
+                            </div>
+                        `;
+                    }
+                    
+                    content += '</div>';
+                    modalContent.innerHTML = content;
+                    modal.style.display = 'block';
+                });
+            } else {
+                cell.className = 'grid-cell';
+            }
+            
+            cell.textContent = i;
+            container.appendChild(cell);
+        }
+        
+        if (titleSpan) {
+            titleSpan.textContent = occupiedCount;
+        }
+    }
+
+    // Initial generation
+    generateCells('.container-area', 40);
+    generateCells('.trailer-area', 10);
+    generateCells('.chassis-area', 20);
+
+    // Regenerate cells when yard selection changes
+    document.getElementById('yard-select').addEventListener('change', function() {
+        generateCells('.container-area', 40);
+        generateCells('.trailer-area', 10);
+        generateCells('.chassis-area', 20);
+    });
+
+    // Modal close functionality
+    const modal = document.getElementById('equipmentModal');
+    const closeBtn = document.querySelector('.close-btn');
+    
+    closeBtn.onclick = function() {
+        modal.style.display = "none";
+    }
+    
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+});
+</script>
+
+    <div id="equipmentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Equipment Information</h2>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <div id="timelineModal" class="timeline-modal">
+        <div class="timeline-modal-content">
+            <div class="timeline-modal-header">
+                <div class="timeline-modal-title"></div>
+                <span class="timeline-close-btn">&times;</span>
+            </div>
+            <div class="timeline-list"></div>
+        </div>
+    </div>
+</body>
+</html>

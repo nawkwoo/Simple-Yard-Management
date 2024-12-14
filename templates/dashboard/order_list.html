@@ -8,6 +8,41 @@
     <!-- Font Awesome CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        /* nav-buttons 스타일 */
+        .nav-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 100px;
+            width: 20%;
+            position: absolute;
+            top: 2rem;
+        }
+    
+        /* 링크 스타일 */
+        .nav-buttons a {
+            text-decoration: none;
+            color: #ecf0f1;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.3s ease; /* 부드러운 애니메이션 */
+            color: rgb(64, 68, 73);
+        }
+    
+        /* 링크 hover 효과 */
+        .nav-buttons a:hover {
+            background-color: #34495e; /* 어두운 네이비 */
+            color: #1abc9c; /* 민트 */
+        }
+    
+        /* active 상태 스타일 */
+        .nav-buttons a.active {
+            background-color: #1abc9c; /* 민트 */
+            color: #2c3e50; /* 다크 네이비 */
+        }
+
         body {
             font-family: Arial, sans-serif;
             background: url("{% static 'images/background.gif' %}") no-repeat center center fixed;
@@ -196,6 +231,12 @@
     </style>
 </head>
 <body>
+    <!-- 네비게이션 바 포함 -->
+
+    <div class="nav-buttons">
+        <a href="{% url 'dashboard:home' %}" class="{% if request.path == '/dashboard/' %}active{% endif %}">HOME</a>
+    </div>
+
     <div class="logo">Yard Management System</div>
     <div class="container">
         <div class="header">

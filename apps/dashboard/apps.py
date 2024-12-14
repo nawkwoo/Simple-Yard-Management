@@ -1,7 +1,6 @@
 # apps/dashboard/apps.py
 
 from django.apps import AppConfig
-from apps.dashboard.tasks import OrderTableMonitor  # OrderTableMonitor 임포트
 
 class DashboardConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'

@@ -39,7 +39,7 @@ def process_order(order_id):
             if order.chassis and not order.truck:
                 raise ValidationError("샤시는 트럭과 함께 사용해야 합니다.")
 
-            if order.container and not order.chassis:
+            if order.container and not order.container:
                 raise ValidationError("컨테이너는 샤시와 함께 사용해야 합니다.")
 
             if order.truck:
@@ -51,7 +51,7 @@ def process_order(order_id):
                 ).first()
 
                 if not inventory_item:
-                    raise ValidationError(f"Truck 시리얼넘버({equipment.serial_number})가 출발 위치 야드에 없습니다.")
+                    raise ValidationError(f"Truck 시리얼넘버({order.truck.serial_number})가 출발 위치 야드에 없습니다.")
 
             if order.chassis:
                 chassisObject = Chassis.objects.get(serial_number=order.chassis.serial_number)
@@ -62,7 +62,7 @@ def process_order(order_id):
                 ).first()
 
                 if not inventory_item:
-                    raise ValidationError(f"Chassis 시리얼넘버({equipment.serial_number})가 출발 위치 야드에 없습니다.")
+                    raise ValidationError(f"Chassis 시리얼넘버({order.chassis.serial_number})가 출발 위치 야드에 없습니다.")
                 
             if order.container:
                 containerObject = Container.objects.get(serial_number=order.container.serial_number)
@@ -73,7 +73,7 @@ def process_order(order_id):
                 ).first()
 
                 if not inventory_item:
-                    raise ValidationError(f"Container 시리얼넘버({equipment.serial_number})가 출발 위치 야드에 없습니다.")
+                    raise ValidationError(f"Container 시리얼넘버({order.container.serial_number})가 출발 위치 야드에 없습니다.")
                 
             if order.trailer:
                 trailerObject = Trailer.objects.get(serial_number=order.trailer.serial_number)
@@ -84,7 +84,7 @@ def process_order(order_id):
                 ).first()
 
                 if not inventory_item:
-                    raise ValidationError(f"Trailer 시리얼넘버({equipment.serial_number})가 출발 위치 야드에 없습니다.")
+                    raise ValidationError(f"Trailer 시리얼넘버({order.trailer.serial_number})가 출발 위치 야드에 없습니다.")
 
             order.status = "COMPLETED"
             order.error_message = None  # 오류 메시지 초기화
