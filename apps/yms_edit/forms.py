@@ -63,10 +63,24 @@ class BaseEquipmentForm(forms.ModelForm):
         equipment_type = kwargs.pop('equipment_type', None)
         super().__init__(*args, **kwargs)
         if equipment_type:
-            self.fields['site'].queryset = Site.objects.filter(
+            sites = Site.objects.filter(
                 equipment_type=equipment_type,
                 is_active=True
-            )
+            ).order_by('yard_id', 'id')
+
+            # Python으로 중복 제거
+            seen_yard_ids = set()
+            unique_site_ids = []
+
+            for site in sites:
+                if site.yard_id not in seen_yard_ids:
+                    unique_site_ids.append(site.id)
+                    seen_yard_ids.add(site.yard_id)
+
+            # QuerySet으로 재생성
+            unique_sites = Site.objects.filter(id__in=unique_site_ids)
+
+            self.fields['site'].queryset = unique_sites
             self.fields['site'].empty_label = "사이트 선택"
 
 
