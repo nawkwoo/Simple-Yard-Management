@@ -140,8 +140,34 @@ class OrderTableMonitor:
                 inventory_item.is_available = False
                 inventory_item.save()
 
+    def find_smallest_missing(self, positions, max_value):
+        if not positions:
+            return 1  # If the list is empty, return 1
+
+        position_set = set(positions)  # Convert list to a set for fast lookup
+
+        # Iterate from 1 to max_value to find the first missing number
+        for i in range(1, max_value + 1):
+            if i not in position_set:
+                return i
+
+        # If no missing number is found, return the next integer after max_value
+        return max_value + 1
+
     def inventory_equipment_move(self, order):
         if order.truck:
+            truck_capcity = Site.objects.filter(
+                yard_id=order.arrival_yard_id,
+                equipment_type='Truck'
+            ).first().capacity
+
+            positions = YardInventory.objects.filter(
+                yard_id=order.arrival_yard_id,
+                equipment_type='Truck',
+                is_available=True
+            ).values_list('position', flat=True)
+            position = self.find_smallest_missing(positions, truck_capcity)
+
             truckObject = order.truck
             inventory_item = YardInventory.objects.filter(
                 yard_id=order.departure_yard_id,
@@ -151,10 +177,22 @@ class OrderTableMonitor:
             if inventory_item:
                 inventory_item.yard_id = order.arrival_yard_id
                 inventory_item.is_available = True
+                inventory_item.position = position
                 inventory_item.save()
 
         if order.chassis:
             chassisObject = order.chassis
+            chassis_capcity = Site.objects.filter(
+                yard_id=order.arrival_yard_id,
+                equipment_type='Chassis'
+            ).first().capacity
+            positions = YardInventory.objects.filter(
+                yard_id=order.arrival_yard_id,
+                equipment_type='Chassis',
+                is_available=True
+            ).values_list('position', flat=True)
+            position = self.find_smallest_missing(positions, chassis_capcity)
+
             inventory_item = YardInventory.objects.filter(
                 yard_id=order.departure_yard_id,
                 equipment_id=chassisObject.id,
@@ -163,10 +201,22 @@ class OrderTableMonitor:
             if inventory_item:
                 inventory_item.yard_id = order.arrival_yard_id
                 inventory_item.is_available = True
+                inventory_item.position = position
                 inventory_item.save()
 
         if order.container:
             containerObject = order.container
+            container_capcity = Site.objects.filter(
+                yard_id=order.arrival_yard_id,
+                equipment_type='Container'
+            ).first().capacity
+            positions = YardInventory.objects.filter(
+                yard_id=order.arrival_yard_id,
+                equipment_type='Container',
+                is_available=True
+            ).values_list('position', flat=True)
+            position = self.find_smallest_missing(positions, container_capcity)
+
             inventory_item = YardInventory.objects.filter(
                 yard_id=order.departure_yard_id,
                 equipment_id=containerObject.id,
@@ -175,10 +225,22 @@ class OrderTableMonitor:
             if inventory_item:
                 inventory_item.yard_id = order.arrival_yard_id
                 inventory_item.is_available = True
+                inventory_item.position = position
                 inventory_item.save()
 
         if order.trailer:
             trailerObject = order.trailer
+            trailer_capcity = Site.objects.filter(
+                yard_id=order.arrival_yard_id,
+                equipment_type='Trailer'
+            ).first().capacity
+            positions = YardInventory.objects.filter(
+                yard_id=order.arrival_yard_id,
+                equipment_type='Trailer',
+                is_available=True
+            ).values_list('position', flat=True)
+            position = self.find_smallest_missing(positions, trailer_capcity)
+
             inventory_item = YardInventory.objects.filter(
                 yard_id=order.departure_yard_id,
                 equipment_id=trailerObject.id,
@@ -187,40 +249,8 @@ class OrderTableMonitor:
             if inventory_item:
                 inventory_item.yard_id = order.arrival_yard_id
                 inventory_item.is_available = True
+                inventory_item.position = position
                 inventory_item.save()
-
-    def site_equipment_activate(self, order, activate=False):
-        if order.truck:
-            site_item = Site.objects.filter(
-                id=order.truck.site_id
-            ).first()
-            if site_item:
-                site_item.is_active = activate
-                site_item.save()
-
-        if order.chassis:
-            site_item = Site.objects.filter(
-                id=order.chassis.site_id
-            ).first()
-            if site_item:
-                site_item.is_active = activate
-                site_item.save()
-
-        if order.container:
-            site_item = Site.objects.filter(
-                id=order.container.site_id
-            ).first()
-            if site_item:
-                site_item.is_active = activate
-                site_item.save()
-
-        if order.trailer:
-            site_item = Site.objects.filter(
-                id=order.trailer.site_id
-            ).first()
-            if site_item:
-                site_item.is_active = activate
-                site_item.save()
 
     def equipment_move(self, order):
         if order.truck:
@@ -285,7 +315,6 @@ class OrderTableMonitor:
                             # 출발 야드에서 장비 제거
                             # inventory에서 equipment 비활성 화
                             self.inventory_equipment_inactive(order)
-                            self.site_equipment_activate(order, False)
                             # 장비 비활성화
                             self.equipment_active(order, False)
 

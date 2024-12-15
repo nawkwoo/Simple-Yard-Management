@@ -113,3 +113,27 @@ class Transaction(models.Model):
         else:
             if any([self.truck, self.chassis, self.container, self.trailer]):
                 raise ValidationError("Personal Vehicle은 별도의 장비 필드를 가질 수 없습니다.")
+
+class EquipmentSpace(models.Model):
+    """
+    Vieew Yard에 저장되는 Equipment Space 모델
+    """
+    yard = models.ForeignKey(
+        Yard,
+        on_delete=models.CASCADE,
+        related_name="EquipmentSpace",
+        help_text="장비가 속한 야드"
+    )
+
+    equipment_type = models.CharField(max_length=10, help_text="장비의 유형 (Truck, Chassis, etc.)")
+    equipment_id = models.CharField(
+        max_length=15,
+        unique=True,
+        help_text="장비의 고유 ID"
+    )
+ 
+    position = models.IntegerField(
+        blank=True,
+        null=False,
+        help_text="추가적인 정보"
+    )

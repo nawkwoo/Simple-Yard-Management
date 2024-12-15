@@ -99,6 +99,12 @@ class YardInventory(models.Model):
     )
     is_available = models.BooleanField(default=True, help_text="장비의 사용 가능 여부")
 
+    position = models.IntegerField(
+        blank=True,
+        null=False,
+        help_text="추가적인 정보"
+    )
+    
     def __str__(self):
         return f"{self.equipment_type} - {self.equipment_id}"
 

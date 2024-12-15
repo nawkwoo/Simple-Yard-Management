@@ -261,7 +261,20 @@ class EquipmentCreateView(CreateView):
     장비 추가 뷰.
     """
     template_name = 'yms_edit/equipment_form.html'
+    def find_smallest_missing(self, positions, max_value):
+        if not positions:
+            return 1  # If the list is empty, return 1
 
+        position_set = set(positions)  # Convert list to a set for fast lookup
+
+        # Iterate from 1 to max_value to find the first missing number
+        for i in range(1, max_value + 1):
+            if i not in position_set:
+                return i
+
+        # If no missing number is found, return the next integer after max_value
+        return max_value + 1
+    
     def get_form_class(self):
         """
         URL 파라미터에 따라 적절한 폼 클래스를 반환합니다.
@@ -296,11 +309,26 @@ class EquipmentCreateView(CreateView):
         yard = Yard.objects.filter(
             yard_id=equipment.site.yard.yard_id
         ).first()  # 기본 야드 선택 (변경 필요 시 로직 추가)
+
+        equipment_type = self.kwargs.get('model').capitalize()
+        equipment_capcity = Site.objects.filter(
+            yard_id=yard.id,
+            equipment_type=equipment_type
+        ).first().capacity
+
+        positions = YardInventory.objects.filter(
+            yard_id=yard.id,
+            equipment_type=equipment_type,
+            is_available=True
+        ).values_list('position', flat=True)
+        position = self.find_smallest_missing(positions, equipment_capcity)
+
         YardInventory.objects.create(
             yard=yard,
             equipment_type=self.kwargs.get('model').capitalize(),
             equipment_id=equipment.id,  # Equipment의 ID 사용
-            is_available=equipment.is_active
+            is_available=equipment.is_active,
+            position=position
         )        
         messages.success(
             self.request,

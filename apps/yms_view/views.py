@@ -14,8 +14,50 @@ from django.core.exceptions import ValidationError
 
 from .models import Transaction
 from .utils import process_order
-from apps.yms_edit.models import Yard, Site, Truck, Chassis, Container, Trailer, Division
+from apps.yms_edit.models import Yard, Site, Truck, Chassis, Container, Trailer, Division, YardInventory
 from django.urls import reverse_lazy
+from django.core.exceptions import ObjectDoesNotExist
+
+class EquipmentListView(View):
+    def get(self, request, *args, **kwargs):
+        # 'yard_id'를 querystring에서 가져옵니다.
+        yard_id = request.GET.get('yard_id', None)
+
+        if not yard_id:
+            return JsonResponse({'error': 'yard_id is required'}, status=400)
+
+        yard_id = Yard.objects.filter(yard_id=yard_id).first().id
+        if not yard_id:
+            return JsonResponse({'error': 'yard_id does not exist'}, status=400)     
+           
+        try:
+            # YardInventory에서 yard_id로 필터링
+            yard_inventory = YardInventory.objects.filter(yard_id=yard_id, is_available=True)
+        except ObjectDoesNotExist:
+            return JsonResponse({'error': 'Invalid yard_id'}, status=404)
+
+        # 장비를 equipment_type별로 가져오는 함수
+        def get_inventory(equipment_type):
+            # 해당 yard에서 주어진 equipment_type에 해당하는 inventory 필터링
+            inventory_items = yard_inventory.filter(equipment_type=equipment_type)
+
+            if not inventory_items.exists():
+                return []
+
+            # 필요한 필드만 추출하여 JSON 직렬화 가능하도록 리스트 변환
+            return list(
+                inventory_items.values('id', 'equipment_type', 'equipment_id', 'is_available', 'position')
+            )
+
+        # 모든 장비 유형의 데이터를 수집
+        response_data = {
+            "trucks": get_inventory('Truck'),
+            "chassis": get_inventory('Chassis'),
+            "container": get_inventory('Container'),
+            "trailers": get_inventory('Trailer'),
+        }
+
+        return JsonResponse({'equipments': response_data}, status=200)
 
 
 class YardListView(View):
