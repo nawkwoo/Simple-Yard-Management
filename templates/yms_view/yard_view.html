@@ -592,17 +592,15 @@
                     <option value="MOB">MOB</option>
                 </select>
                 <select class="nav-select" id="yard-select">
-                    <option value="LA00" selected>LA00</option>
-                    <option value="LA01">LA01</option>
-                    <option value="LA02">LA02</option>
+                    <option value="" disabled selected>Select a yard</option>
                 </select>
-                <div class="timeline">
-                    <div>20:17 / AAAA00 / IN / JASON</div>
+                <div class="timeline" id="transactions">
+                    {% comment %} <div>20:17 / AAAA00 / IN / JASON</div>
                     <div>17:13 / AAAD48/ OUT / PANWOO</div>
                     <div>15:10 / AABC07 / IN / MIKE</div>
                     <div>14:05 / ABCD10 / OUT / JOHN</div>
                     <div>13:00 / BCDD32 / IN / SARAH</div>
-                    <button class="expand-button">+</button>
+                    <button class="expand-button">+</button> {% endcomment %}
                 </div>
                 <input type="date" id="date-picker" class="date-picker">
                 <div id="current-time" class="current-time"></div>
@@ -688,16 +686,182 @@
             MOB: ["MOB00", "MOB01", "MOB02"]
         };
     
-        function updateYards() {
-            const division = document.getElementById("division-select").value;
-            const yardSelect = document.getElementById("yard-select");
-            yardSelect.innerHTML = "";
-            yardOptions[division].forEach(yard => {
-                const option = document.createElement("option");
-                option.value = yard;
-                option.textContent = yard;
-                yardSelect.appendChild(option);
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        function setTimelineEvent() {
+            // Timeline 클릭 이벤트 추가
+            const timelineItems = document.querySelectorAll('.timeline div');
+            const modal = document.getElementById('equipmentModal');
+            const modalContent = document.getElementById('modalContent');
+            
+            timelineItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const [time, equipment_type, equipment_id, status] = item.textContent.split(' / ');
+                    const user = "Unknown"; // 임시로 Unknown으로 설정
+                    // 모달 내용 업데이트
+                    modalContent.innerHTML = `
+                        <div class="modal-body">
+                            <div class="equipment-image">
+                                Equipment Image
+                            </div>
+                            <div class="equipment-details">
+                                <div class="info-row">
+                                    <span class="info-label">Equipment ID:</span>
+                                    <span>${equipment_id}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Status:</span>
+                                    <span>${status}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Time:</span>
+                                    <span>${time}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Type:</span>
+                                    <span>${equipment_type}</span>
+                                </div>
+                                    <div class="info-row">
+                                    <span class="info-label">Driver:</span>
+                                    <span>${user}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    modal.style.display = 'block';
+                });
             });
+            
+            // 모달 닫기 기능
+            const closeBtn = document.querySelector('.close-btn');
+            closeBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+            
+            window.addEventListener('click', (event) => {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // 장비 타입 판별 함수 (예시)
+            function getEquipmentType(id) {
+                const prefix = id.substring(0, 2);
+                switch(prefix) {
+                    case 'AA':
+                        return 'Container';
+                    case 'AB':
+                        return 'Trailer';
+                    case 'BC':
+                        return 'Chassis';
+                    default:
+                        return 'Unknown';
+                }
+            }
+        }
+        // 페이지 로드 시 초기화
+        window.onload = function () {
+            updateYards("LA"); // 기본 divisionName으로 호출
+        }
+
+        async function updateYards(division_name) {
+            var divisionName = "";
+            if(division_name == null){
+                divisionName = document.getElementById("division-select").value;
+            }
+            else{
+                divisionName = division_name;
+            }
+
+            document.getElementById("division-select").value;
+            const yardSelect = document.getElementById("yard-select");
+            try {
+                // POST 요청
+                const response = await fetch('/view/transactions/yard/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken') // CSRF Token 설정
+                    },
+                    body: new URLSearchParams({
+                        division_name: divisionName // 파라미터로 전달
+                    })
+                });
+
+                // 응답 처리
+                if (response.ok) {
+                    const data = await response.json();
+                    const yardList = data.yard_ids; // 백엔드에서 반환된 yard_ids 리스트
+                    const yardSelect = document.getElementById("yard-select");
+                    yardSelect.innerHTML = ""; // 기존 옵션 초기화
+        
+                    if (yardList.length === 0) {
+                        const defaultOption = document.createElement("option");
+                        defaultOption.value = "";
+                        defaultOption.textContent = "No yards available";
+                        defaultOption.disabled = true;
+                        defaultOption.selected = true;
+                        yardSelect.appendChild(defaultOption);
+                        return;
+                    }
+        
+                    // 새로운 옵션 추가
+                    yardList.forEach(yardId => {
+                        const option = document.createElement("option");
+                        option.value = yardId;
+                        option.textContent = yardId;
+                        yardSelect.appendChild(option);
+                    });
+
+                    try {
+                        // GET 요청, queryString으로 division_name 전달
+                        const selectedYardId = document.getElementById("yard-select").value;
+                        const response = await fetch(`/view/transactions/yard/?yard_id=${encodeURIComponent(selectedYardId)}`, {
+                            method: 'GET',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken') // CSRF Token 설정
+                            }
+                        });
+                        // 응답 처리
+                        if (response.ok) {
+                            const data = await response.json();
+                            const timelineContainer = document.getElementById('transactions');
+                            timelineContainer.innerHTML = ''; // 기존 내용 초기화
+                            
+                            // 데이터를 기반으로 타임라인 항목을 동적으로 추가
+                             data.transactions.forEach(item => {
+                                const timelineItem = document.createElement('div');
+                                timelineItem.textContent = `${item.movement_time} / ${item.equipment_type} / ${item.truck_id} / ${item.type}`;
+                                timelineContainer.appendChild(timelineItem);
+                            });
+                            setTimelineEvent();
+                        } else {
+                            document.getElementById("transactions").innerHTML = "Error fetching yard IDs.";
+                        }
+                    } catch (error) {
+                        console.error("Error:", error);
+                        document.getElementById("transactions").innerHTML = "An unexpected error occurred.";
+                    } 
+                } else {
+                    document.getElementById("result").innerHTML = "Error fetching yard IDs.";
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById("result").innerHTML = "An unexpected error occurred.";
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function() {

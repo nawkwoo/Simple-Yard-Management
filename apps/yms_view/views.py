@@ -1,5 +1,8 @@
 # apps/yms_view/views.py
 
+import json
+from urllib.parse import parse_qs
+from django.http import JsonResponse
 from django.views.generic import ListView, View
 from django.db.models import Q
 from datetime import datetime
@@ -14,6 +17,67 @@ from .utils import process_order
 from apps.yms_edit.models import Yard, Site, Truck, Chassis, Container, Trailer, Division
 from django.urls import reverse_lazy
 
+
+class YardListView(View):
+    def post(self, request, *args, **kwargs):
+        post_data = request.body.decode('utf-8')
+
+        # URL 파라미터를 파싱합니다.
+        data = parse_qs(post_data)
+
+        # 'division_name' 값을 가져옵니다.
+        division_name = data.get('division_name', [None])[0]
+
+        if not division_name:
+            return JsonResponse({'error': 'division_name is required'}, status=400)
+
+        # yard_prefix를 기준으로 Yard 모델에서 데이터를 가져옵니다.
+        division_id = Division.objects.get(name=division_name).id
+        yard_ids = list(Yard.objects.filter(division_id=division_id).values_list('yard_id', flat=True))
+
+        # 결과를 JSON으로 반환합니다.
+        return JsonResponse({'yard_ids': yard_ids}, status=200)
+    
+    def get(self, request, *args, **kwargs):
+        # 'yard_id'를 querystring에서 가져옵니다.
+        yard_id = request.GET.get('yard_id', None)
+
+        if not yard_id:
+            return JsonResponse({'error': 'yard_id is required'}, status=400)
+
+        yard_id = Yard.objects.get(yard_id=yard_id).id
+        # yard_id를 기준으로 Transaction을 필터링하고, Truck 모델을 함께 조인
+        transactions_equipment_in = Transaction.objects.filter(
+            Q(arrival_yard_id=yard_id)
+        ).select_related('truck')  # 'truck'은 Transaction 모델에서 Truck 외래 키 필드 이름
+
+        result_in = []
+        for transaction in transactions_equipment_in:
+            result_in.append({
+                'movement_time': transaction.movement_time,
+                'equipment_type': transaction.equipment_type,
+                'truck_id': transaction.truck.truck_id if transaction.truck else None,
+                'type': 'in'  # 'type' 필드 추가
+            })
+
+        # yard_id를 기준으로 Transaction을 필터링하고, Truck 모델을 함께 조인
+        transactions_equipment_out = Transaction.objects.filter(
+            Q(departure_yard_id=yard_id)
+        ).select_related('truck')  # 'truck'은 Transaction 모델에서 Truck 외래 키 필드 이름
+        result_out = []
+        for transaction in transactions_equipment_out:
+            result_out.append({
+                'movement_time': transaction.movement_time,
+                'equipment_type': transaction.equipment_type,
+                'truck_id': transaction.truck.truck_id if transaction.truck else None,
+                'type': 'out'  # 'type' 필드 추가
+            })
+        combined_result = result_in + result_out
+        # 'movement_time'을 기준으로 오름차순으로 정렬합니다.
+        combined_result_sorted = sorted(combined_result, key=lambda x: x['movement_time'])
+
+        # 결과를 JSON으로 반환
+        return JsonResponse({'transactions': combined_result_sorted}, status=200)
 
 class TransactionListView(LoginRequiredMixin, ListView):
     """
