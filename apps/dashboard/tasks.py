@@ -222,42 +222,42 @@ class OrderTableMonitor:
                 site_item.is_active = activate
                 site_item.save()
 
-    def site_equipment_move(self, order):
+    def equipment_move(self, order):
         if order.truck:
-            site_item = Site.objects.filter(
-                id=order.truck.site_id
-            ).first()
-            if site_item:
-                site_item.yard_id = order.arrival_yard_id
-                site_item.is_active = True
-                site_item.save()
+            site_id = Site.objects.get(
+                yard_id=order.arrival_yard_id,  # Yard 모델의 yard_id 필드와 필터
+                equipment_type='Truck'  # equipment_type 필터
+            ).id
+            order.truck.site_id = site_id
+            order.truck.is_active = True
+            order.truck.save()
 
         if order.chassis:
-            site_item = Site.objects.filter(
-                id=order.chassis.site_id
-            ).first()
-            if site_item:
-                site_item.yard_id = order.arrival_yard_id
-                site_item.is_active = True
-                site_item.save()
+            site_id = Site.objects.get(
+                yard_id=order.arrival_yard_id,  # Yard 모델의 yard_id 필드와 필터
+                equipment_type='Chassis'  # equipment_type 필터
+            ).id
+            order.chassis.site_id = site_id
+            order.chassis.is_active = True
+            order.chassis.save()
 
         if order.container:
-            site_item = Site.objects.filter(
-                id=order.container.site_id
-            ).first()
-            if site_item:
-                site_item.yard_id = order.arrival_yard_id
-                site_item.is_active = True
-                site_item.save()
+            site_id = Site.objects.get(
+                yard_id=order.arrival_yard_id,  # Yard 모델의 yard_id 필드와 필터
+                equipment_type='Container'  # equipment_type 필터
+            ).id            
+            order.container.site_id = site_id
+            order.container.is_active = True
+            order.container.save()
 
         if order.trailer:
-            site_item = Site.objects.filter(
-                id=order.trailer.site_id
-            ).first()
-            if site_item:
-                site_item.yard_id = order.arrival_yard_id
-                site_item.is_active = True
-                site_item.save()
+            site_id = Site.objects.get(
+                yard_id=order.arrival_yard_id,  # Yard 모델의 yard_id 필드와 필터
+                equipment_type='Trailer'  # equipment_type 필터
+            ).id                
+            order.trailer.site_id = site_id
+            order.trailer.is_active = True
+            order.trailer.save()
 
 
     def run(self):
@@ -315,8 +315,7 @@ class OrderTableMonitor:
 
                         if has_arrived: # 주문 레코드에세 대한 도착 시간이 경과한 경우
                             self.inventory_equipment_move(order)
-                            self.equipment_active(order, True)
-                            self.site_equipment_move(order)
+                            self.equipment_move(order)
                             if order.status_move == order.MOVE_STATUS_DEPARTURED:
                                 # 트랜잭션 생성
                                 created = Transaction.objects.create(

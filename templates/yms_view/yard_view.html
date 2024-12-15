@@ -584,14 +584,14 @@
     <div class="container">
         <div class="main-content">
             <div class="top-nav">
-                <select class="nav-select" id="division-select" onchange="updateYards()">
+                <select class="nav-select" id="division-select" onchange="updateDivision()">
                     <option value="LA" selected>LA</option>
                     <option value="PHX">PHX</option>
                     <option value="HOU">HOU</option>
                     <option value="SAV">SAV</option>
                     <option value="MOB">MOB</option>
                 </select>
-                <select class="nav-select" id="yard-select">
+                <select class="nav-select" id="yard-select" onchange="updateYard()">
                     <option value="" disabled selected>Select a yard</option>
                 </select>
                 <div class="timeline" id="transactions">
@@ -678,13 +678,14 @@
     </div>
 
     <script>
+        {% comment %} 
         const yardOptions = {
             LA: ["LA00", "LA01", "LA02"],
             PHX: ["PHX00", "PHX01", "PHX02"],
             HOU: ["HOU00", "HOU01", "HOU02"],
             SAV: ["SAV00", "SAV01", "SAV02"],
             MOB: ["MOB00", "MOB01", "MOB02"]
-        };
+        }; {% endcomment %}
     
         function getCookie(name) {
             let cookieValue = null;
@@ -774,10 +775,42 @@
         }
         // 페이지 로드 시 초기화
         window.onload = function () {
-            updateYards("LA"); // 기본 divisionName으로 호출
+            updateDivision("LA"); // 기본 divisionName으로 호출
         }
 
-        async function updateYards(division_name) {
+        async function updateYard() {
+            try {
+                // GET 요청, queryString으로 division_name 전달
+                const selectedYardId = document.getElementById("yard-select").value;
+                const response = await fetch(`/view/transactions/yard/?yard_id=${encodeURIComponent(selectedYardId)}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken') // CSRF Token 설정
+                    }
+                });
+                // 응답 처리
+                if (response.ok) {
+                    const data = await response.json();
+                    const timelineContainer = document.getElementById('transactions');
+                    timelineContainer.innerHTML = ''; // 기존 내용 초기화
+                    
+                    // 데이터를 기반으로 타임라인 항목을 동적으로 추가
+                     data.transactions.forEach(item => {
+                        const timelineItem = document.createElement('div');
+                        timelineItem.textContent = `${item.movement_time} / ${item.equipment_type} / ${item.truck_id} / ${item.type}`;
+                        timelineContainer.appendChild(timelineItem);
+                    });
+                    setTimelineEvent();
+                } else {
+                    document.getElementById("transactions").innerHTML = "Error fetching yard IDs.";
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById("transactions").innerHTML = "An unexpected error occurred.";
+            } 
+        }
+
+        async function updateDivision(division_name) {
             var divisionName = "";
             if(division_name == null){
                 divisionName = document.getElementById("division-select").value;
