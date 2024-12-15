@@ -293,7 +293,9 @@ class EquipmentCreateView(CreateView):
         response = super().form_valid(form)
         equipment = form.instance
         # YardInventory 객체 생성
-        yard = Yard.objects.first()  # 기본 야드 선택 (변경 필요 시 로직 추가)
+        yard = Yard.objects.filter(
+            yard_id=equipment.site.yard.yard_id
+        ).first()  # 기본 야드 선택 (변경 필요 시 로직 추가)
         YardInventory.objects.create(
             yard=yard,
             equipment_type=self.kwargs.get('model').capitalize(),

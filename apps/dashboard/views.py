@@ -119,10 +119,14 @@ def upload_csv(request):
                         container = Container.objects.filter(container_id=container_id).first() if container_id else None
                         trailer = Trailer.objects.filter(trailer_id=trailer_id).first() if trailer_id else None
                         # 시간 변환
-                        departure_time_str = f"{departure_time_str}:00"  # 초 추가  // exception 발생하여 datetime format 맞춤 (csv 파일에서는 초가 없음)
-                        arrival_time_str = f"{arrival_time_str}:00"  # 초 추가      // exception 발생하여 datetime format 맞춤 (csv 파일에서는 초가 없음)
-                        departure_time = datetime.strptime(departure_time_str, '%Y-%m-%d %H:%M:%S')
-                        arrival_time = datetime.strptime(arrival_time_str, '%Y-%m-%d %H:%M:%S')
+                        try:
+                            departure_time = datetime.strptime(departure_time_str, '%Y-%m-%d %H:%M:%S')
+                            arrival_time = datetime.strptime(arrival_time_str, '%Y-%m-%d %H:%M:%S')
+                        except ValueError:
+                            departure_time_str = f"{departure_time_str}:00"  # 초 추가  // exception 발생하여 datetime format 맞춤 (csv 파일에서는 초가 없음)
+                            arrival_time_str = f"{arrival_time_str}:00"  # 초 추가      // exception 발생하여 datetime format 맞춤 (csv 파일에서는 초가 없음)
+                            departure_time = datetime.strptime(departure_time_str, '%Y-%m-%d %H:%M:%S')
+                            arrival_time = datetime.strptime(arrival_time_str, '%Y-%m-%d %H:%M:%S')
 
 
                         # Row 2: Cannot assign "<Driver: WGHGAC50 - hni>": "Order.driver" must be a "CustomUser" instance.
