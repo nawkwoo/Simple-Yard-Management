@@ -5,308 +5,290 @@
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>CSV 파일 업로드 - Yard Management System</title>
-   <!-- Font Awesome CSS -->
    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
    <style>
-       /* 기존 스타일 유지 */
-       
-       .message.error {
-           background: #fee2e2;
-           color: #dc2626;
-           border-left: 4px solid #dc2626;
-           padding: 1rem;
-           margin: 1rem 0;
-           border-radius: 8px;
-       }
+        /* 기본 스타일 */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+                         Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
 
-       .message.success {
-           background: #d1fae5;
-           color: #16a34a;
-           border-left: 4px solid #16a34a;
-           padding: 1rem;
-           margin: 1rem 0;
-           border-radius: 8px;
-       }
+        body {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            display: flex;
+        }
 
-       body {
-           font-family: Arial, sans-serif;
-           background: linear-gradient(135deg, #e0e7ff, #f8fafc);
-           margin: 0;
-           padding: 0;
-           min-height: 100vh;
-           display: flex;
-           align-items: center;
-           justify-content: center;
-           color: rgb(64, 68, 73);
-           overflow-x: hidden;
-       }
+        /* 메인 컨텐츠 영역 */
+        .main-content {
+            flex: 1;
+            {% comment %} margin-left: 180px; {% endcomment %}
+            min-height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
 
-       .logo {
-           position: absolute;
-           top: 2rem;
-           left: 50%;
-           transform: translateX(-50%);
-           font-size: 1.5rem;
-           font-weight: 800;
-           color: rgb(64, 68, 73);
-           z-index: 2;
-           letter-spacing: -0.5px;
-           background: rgba(240, 240, 240, 0.85);
-           padding: 1rem 2rem;
-           border-radius: 12px;
-           backdrop-filter: blur(8px);
-           box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-       }
+        /* 컨테이너 */
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            padding: 2.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin: 0 auto;
+        }
 
-       .container {
-           width: 100%;
-           max-width: 600px;
-           background: white;
-           padding: 2.5rem;
-           border-radius: 15px;
-           box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-           margin: 4rem auto 2rem auto; /* 상단 여백 증가 */
-       }
+        h1 {
+            color: #2c3e50;
+            margin: 0 0 2rem 0;
+            font-size: 1.5rem;
+            text-align: center;
+            font-weight: 600;
+        }
 
-       h1 {
-           color: #4f46e5;
-           margin: 0 0 2rem 0;
-           font-size: 2rem;
-           text-align: center;
-       }
+        .upload-area {
+            border: 2px dashed #1abc9c;
+            border-radius: 5px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
 
-       .upload-area {
-           border: 2px dashed #4f46e5;
-           border-radius: 10px;
-           padding: 2rem;
-           text-align: center;
-           margin-bottom: 2rem;
-           cursor: pointer;
-           transition: all 0.3s ease;
-           width: 100%;
-           box-sizing: border-box;
-       }
+        .upload-area:hover {
+            background: #f8f9fa;
+            border-color: #16a085;
+        }
 
-       .upload-area:hover {
-           background: #f8fafc;
-           border-color: #4338ca;
-       }
+        .upload-icon {
+            font-size: 2.5rem;
+            color: #1abc9c;
+            margin-bottom: 1rem;
+        }
 
-       .upload-icon {
-           font-size: 3rem;
-           color: #4f46e5;
-           margin-bottom: 1rem;
-       }
+        .file-input {
+            display: none;
+        }
 
-       .file-input {
-           display: none;
-       }
+        .file-label {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            display: block;
+            font-size: 14px;
+        }
 
-       .file-label {
-           color: #6b7280;
-           margin-bottom: 1rem;
-           display: block;
-       }
+        .selected-file {
+            margin-top: 1rem;
+            color: #1abc9c;
+            font-weight: 600;
+            display: none;
+            font-size: 14px;
+        }
 
-       .selected-file {
-           margin-top: 1rem;
-           color: #4f46e5;
-           font-weight: 600;
-           display: none;
-       }
+        /* 버튼 컨테이너 수정 */
+        .button-container {
+            width: 100%;
+            margin: 1rem 0;
+            display: flex;
+            justify-content: center;
+        }
 
-       .btn {
-           width: 100%;
-           padding: 1rem 2rem;
-           border-radius: 8px;
-           border: none;
-           font-size: 16px;
-           font-weight: 600;
-           cursor: pointer;
-           text-decoration: none;
-           transition: all 0.3s ease;
-           display: inline-flex;
-           align-items: center;
-           justify-content: center;
-           gap: 8px;
-           margin-bottom: 1rem;
-           box-sizing: border-box;
-           background: #4f46e5;
-           color: white;
-       }
+        .btn {
+            width: 100%;
+            max-width: 300px;
+            padding: 12px 20px;
+            border-radius: 5px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #1abc9c;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 0.5rem 0;
+        }
 
-       .btn:hover {
-           background: #4338ca;
-           transform: translateY(-2px);
-       }
+        .btn:hover {
+            background: #16a085;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
 
-       .btn-secondary {
-           background: #6b7280;
-           color: white;
-       }
+        .btn-secondary {
+            background: #2c3e50;
+        }
 
-       .btn-secondary:hover {
-           background: #4b5563;
-           transform: translateY(-2px);
-       }
+        .btn-secondary:hover {
+            background: #34495e;
+        }
 
-       .button-container {
-           width: 100%;
-           margin: 1rem 0;
-       }
+        .message {
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-size: 14px;
+        }
 
-       a.btn {
-           display: inline-flex;
-           text-align: center;
-           text-decoration: none;
-       }
+        .message.error {
+            background: #fee2e2;
+            color: #dc2626;
+            border-left: 4px solid #dc2626;
+        }
 
-       .message {
-           text-align: center;
-           padding: 1rem;
-           border-radius: 8px;
-           margin: 1rem 0;
-       }
+        .message.success {
+            background: #d1fae5;
+            color: #16a085;
+            border-left: 4px solid #1abc9c;
+        }
 
-       .message.info {
-           background: #e0e7ff;
-           color: #4f46e5;
-       }
+        .requirements {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #ecf0f1;
+        }
 
-       .message.error {
-           background: #fee2e2;
-           color: #dc2626;
-       }
+        .requirements h3 {
+            color: #2c3e50;
+            margin-top: 0;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+        }
 
-       .requirements {
-           margin-top: 2rem;
-           padding: 1rem;
-           background: #f8fafc;
-           border-radius: 8px;
-       }
+        .requirements ul {
+            color: #2c3e50;
+            font-size: 13px;
+            margin: 0;
+            padding-left: 1.5rem;
+            line-height: 1.6;
+        }
 
-       .requirements h3 {
-           color: #4f46e5;
-           margin-top: 0;
-           font-size: 1rem;
-           display: flex;
-           align-items: center;
-           gap: 0.5rem;
-       }
+        /* 반응형 스타일 */
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+                padding-bottom: 80px;
+                justify-content: flex-start;
+            }
 
-       .requirements ul {
-           color: #6b7280;
-           font-size: 0.9rem;
-           margin: 0;
-           padding-left: 1.5rem;
-       }
+            .container {
+                padding: 1.5rem;
+            }
 
-       /* 반응형 디자인 */
-       @media (max-width: 768px) {
-           .container {
-               padding: 2rem;
-               margin: 2rem auto 1rem auto;
-           }
+            .btn {
+                max-width: 100%;
+                padding: 10px;
+                font-size: 13px;
+            }
 
-           h1 {
-               font-size: 1.5rem;
-           }
-
-           .upload-icon {
-               font-size: 2.5rem;
-               margin-bottom: 1.5rem;
-           }
-
-           .btn {
-               padding: 10px 20px;
-               font-size: 0.9rem;
-           }
-
-           .requirements h3 {
-               font-size: 0.9rem;
-           }
-       }
+            .upload-icon {
+                font-size: 2rem;
+            }
+        }
    </style>
 </head>
 <body>
-   <div class="logo">Yard Management System</div>
-   <div class="container">
-       <h1>CSV 파일 업로드</h1>
+    {% include 'nav.html' %}
+    
+    <div class="main-content">
+        <div class="container">
+            <h1>CSV 파일 업로드</h1>
 
-       <form method="post" enctype="multipart/form-data" id="upload-form">
-           {% csrf_token %}
-           <div class="upload-area" id="upload-area">
-               <i class="fas fa-cloud-upload-alt upload-icon"></i>
-               <p class="file-label">CSV 파일을 드래그하거나 클릭하여 업로드하세요</p>
-               <input type="file" name="csv_file" accept=".csv" required 
-                      class="file-input" id="file-input">
-               <p class="selected-file" id="selected-file"></p>
-           </div>
+            <form method="post" enctype="multipart/form-data" id="upload-form">
+                {% csrf_token %}
+                <div class="upload-area" id="upload-area">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <p class="file-label">CSV 파일을 드래그하거나 클릭하여 업로드하세요</p>
+                    <input type="file" name="csv_file" accept=".csv" required class="file-input" id="file-input">
+                    <p class="selected-file" id="selected-file"></p>
+                </div>
 
-           <div class="button-container">
-               <button type="submit" class="btn">
-                   <i class="fas fa-upload"></i>
-                   업로드
-               </button>
-           </div>
-       </form>
+                <div class="button-container">
+                    <button type="submit" class="btn">
+                        <i class="fas fa-upload"></i>
+                        업로드
+                    </button>
+                </div>
+            </form>
 
-       {% for message in messages %}
-           <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
-               {{ message }}
-           </div>
-       {% endfor %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
 
-       <div class="button-container">
-           <a href="{% url 'dashboard:order_list' %}" class="btn btn-secondary">
-               <i class="fas fa-arrow-left"></i>
-               주문 목록으로 돌아가기
-           </a>
-       </div>
+            <div class="button-container">
+                <a href="{% url 'dashboard:order_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    목록으로 돌아가기
+                </a>
+            </div>
 
-       <div class="requirements">
-           <h3><i class="fas fa-info-circle"></i> CSV 파일 요구사항</h3>
-           <ul>
-               <li>파일은 CSV 형식이어야 합니다.</li>
-               <li>필수 열: 트럭, 샤시, 컨테이너, 트레일러, 운전자, 출발시간, 도착시간, 출발위치, 도착위치</li>
-               <li>날짜 형식: YYYY-MM-DD HH:MM:SS</li>
-           </ul>
-       </div>
-   </div>
+            <div class="requirements">
+                <h3><i class="fas fa-info-circle"></i> CSV 파일 요구사항</h3>
+                <ul>
+                    <li>파일은 CSV 형식이어야 합니다.</li>
+                    <li>필수 열: 트럭, 샤시, 컨테이너, 트레일러, 운전자, 출발시간, 도착시간, 출발위치, 도착위치</li>
+                    <li>날짜 형식: YYYY-MM-DD HH:MM:SS</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 
-   <script>
-       const uploadArea = document.getElementById('upload-area');
-       const fileInput = document.getElementById('file-input');
-       const selectedFile = document.getElementById('selected-file');
+    <script>
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const selectedFile = document.getElementById('selected-file');
 
-       uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('click', () => fileInput.click());
 
-       uploadArea.addEventListener('dragover', (e) => {
-           e.preventDefault();
-           uploadArea.style.background = '#f8fafc';
-       });
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = '#f8f9fa';
+        });
 
-       uploadArea.addEventListener('dragleave', () => {
-           uploadArea.style.background = 'white';
-       });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.background = 'white';
+        });
 
-       uploadArea.addEventListener('drop', (e) => {
-           e.preventDefault();
-           uploadArea.style.background = 'white';
-           fileInput.files = e.dataTransfer.files;
-           updateFileName();
-       });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = 'white';
+            fileInput.files = e.dataTransfer.files;
+            updateFileName();
+        });
 
-       fileInput.addEventListener('change', updateFileName);
+        fileInput.addEventListener('change', updateFileName);
 
-       function updateFileName() {
-           if (fileInput.files.length > 0) {
-               selectedFile.textContent = `선택된 파일: ${fileInput.files[0].name}`;
-               selectedFile.style.display = 'block';
-           } else {
-               selectedFile.style.display = 'none';
-           }
-       }
-   </script>
+        function updateFileName() {
+            if (fileInput.files.length > 0) {
+                selectedFile.textContent = `선택된 파일: ${fileInput.files[0].name}`;
+                selectedFile.style.display = 'block';
+            } else {
+                selectedFile.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>

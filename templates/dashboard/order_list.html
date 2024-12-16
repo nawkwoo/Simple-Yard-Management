@@ -5,326 +5,303 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>주문 목록 - Yard Management System</title>
-    <!-- Font Awesome CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* nav-buttons 스타일 */
-        .nav-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 100px;
-            width: 20%;
-            position: absolute;
-            top: 2rem;
-        }
-    
-        /* 링크 스타일 */
-        .nav-buttons a {
-            text-decoration: none;
-            color: #ecf0f1;
-            font-size: 16px;
-            font-weight: bold;
-            padding: 10px 15px;
-            border-radius: 8px;
-            text-align: center;
-            transition: all 0.3s ease; /* 부드러운 애니메이션 */
-            color: rgb(64, 68, 73);
-        }
-    
-        /* 링크 hover 효과 */
-        .nav-buttons a:hover {
-            background-color: #34495e; /* 어두운 네이비 */
-            color: #1abc9c; /* 민트 */
-        }
-    
-        /* active 상태 스타일 */
-        .nav-buttons a.active {
-            background-color: #1abc9c; /* 민트 */
-            color: #2c3e50; /* 다크 네이비 */
+        /* 기본 스타일 */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+                         Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         }
 
         body {
-            font-family: Arial, sans-serif;
-            background: url("{% static 'images/background.gif' %}") no-repeat center center fixed;
-            background-size: cover;
-            margin: 0;
-            padding: 0;
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            display: flex;
+        }
+
+        /* 메인 컨텐츠 영역 */
+        .main-content {
+            flex: 1;
+            {% comment %} margin-left: 180px;  /* nav.html의 사이드바 너비와 맞춤 */ {% endcomment %}
+            padding: 32px;
             min-height: 100vh;
-            color: rgb(64, 68, 73);
-            overflow-x: hidden;
+            box-sizing: border-box;
         }
 
-        .logo {
-            position: absolute;
-            top: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: rgb(64, 68, 73);
-            z-index: 2;
-            letter-spacing: -0.5px;
-            background: rgba(240, 240, 240, 0.85);
-            padding: 1rem 2rem;
-            border-radius: 12px;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-        }
-
+        /* 컨테이너 */
         .container {
-            width: 100%;
-            max-width: 1200px;
+            max-width: 1400px;
+            margin: 0 auto;
             background: white;
-            padding: 2.5rem;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin: 4rem auto 2rem auto; /* 상단 여백 증가 */
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            padding: 24px;
         }
 
+        /* 헤더 영역 */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 24px;
         }
 
         h1 {
-            color: #4f46e5;
+            color: #2c3e50;
             margin: 0;
-            font-size: 2rem;
+            font-size: 18px;
+            font-weight: 600;
         }
 
+        /* 버튼 스타일 */
         .btn {
-            padding: 12px 24px;
-            border-radius: 8px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            background: #4f46e5;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            background: #1abc9c;
             color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
         .btn:hover {
-            background: #4338ca;
-            transform: translateY(-2px);
+            background: #16a085;
         }
 
+        /* 알림 메시지 스타일 */
         .alert {
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 13px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
         }
 
         .alert-dismissible {
+            padding-right: 32px;
             position: relative;
-            padding-right: 2rem;
         }
 
         .btn-close {
             position: absolute;
             top: 50%;
-            right: 1rem;
+            right: 10px;
             transform: translateY(-50%);
             background: none;
             border: none;
-            font-size: 1.2rem;
+            font-size: 16px;
             cursor: pointer;
-            color: inherit;
+            color: #2c3e50;
+            padding: 4px;
         }
 
+        /* 테이블 스타일 */
         table {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 13px;
         }
 
         th, td {
-            padding: 1rem;
+            padding: 10px;
             text-align: left;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #ecf0f1;
         }
 
         th {
-            background: #f8fafc;
-            color: #4f46e5;
-            font-weight: 600;
+            font-weight: 500;
+            color: #2c3e50;
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
-        tr:hover {
-            background: #f8fafc;
+        tr:hover td {
+            background: #f8f9fa;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: #6b7280;
-        }
-
-        .empty-state i {
-            color: #6b7280;
-        }
-
+        /* 상태 뱃지 스타일 */
         .status-badge {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 0.875rem;
-            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 500;
         }
 
         .status-none {
-            background: #f3f4f6;
-            color: #6b7280;
+            background: #f1f3f5;
+            color: #868e96;
         }
 
         .status-pending {
-            background: #f59e0b;
-            color: white;
+            background: #ffd43b;
+            color: #2c3e50;
         }
 
         .status-completed {
-            background: #10b981;
+            background: #2ecc71;
             color: white;
         }
 
         .status-failed {
-            background: #ef4444;
+            background: #e74c3c;
             color: white;
         }
 
-        /* 반응형 디자인 */
+        /* 빈 상태 스타일 */
+        .empty-state {
+            text-align: center;
+            padding: 32px;
+            color: #868e96;
+            font-size: 13px;
+        }
+
+        .empty-state i {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: #adb5bd;
+        }
+
+        /* 반응형 스타일 */
         @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+                padding-bottom: 80px;
+            }
+
             .container {
-                padding: 2rem;
-                margin: 2rem auto 1rem auto;
+                padding: 16px;
             }
 
-            h1 {
-                font-size: 1.5rem;
+            .table-container {
+                overflow-x: auto;
+                margin: 0 -16px;
+                padding: 0 16px;
             }
 
-            .btn {
-                padding: 10px 20px;
-                font-size: 0.9rem;
+            table {
+                font-size: 12px;
             }
 
             th, td {
-                padding: 0.75rem;
-            }
-
-            .empty-state i {
-                font-size: 2rem;
-                margin-bottom: 1rem;
+                padding: 8px;
+                white-space: nowrap;
             }
         }
     </style>
 </head>
 <body>
-    <!-- 네비게이션 바 포함 -->
+    {% include 'nav.html' %}
 
-    <div class="nav-buttons">
-        <a href="{% url 'dashboard:home' %}" class="{% if request.path == '/dashboard/' %}active{% endif %}">HOME</a>
-    </div>
-
-    <div class="logo">Yard Management System</div>
-    <div class="container">
-        <div class="header">
-            <h1>주문 목록</h1>
-            <a href="{% url 'dashboard:upload_csv' %}" class="btn">
-                <i class="fas fa-upload"></i>
-                CSV 업로드
-            </a>
-        </div>
-
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-
-        {% if orders|length > 0 %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>트럭</th>
-                        <th>샤시</th>
-                        <th>컨테이너</th>
-                        <th>트레일러</th>
-                        <th>운전자</th>
-                        <th>출발시간</th>
-                        <th>도착시간</th>
-                        <th>출발위치</th>
-                        <th>도착위치</th>
-                        <th>상태</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in orders %}
-                        <tr>
-                            <td>{{ order.id }}</td>
-                            <td>{{ order.truck.serial_number|default:"없음" }}</td>
-                            <td>{{ order.chassis.serial_number|default:"없음" }}</td>
-                            <td>{{ order.container.serial_number|default:"없음" }}</td>
-                            <td>{{ order.trailer.serial_number|default:"없음" }}</td>
-                            <td>
-                                {% if order.driver %}
-                                    {{ order.driver.driver_id }} - {{ order.driver.user.username }}
-                                {% else %}
-                                    <span class="status-badge status-none">없음</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ order.departure_time }}</td>
-                            <td>{{ order.arrival_time }}</td>
-                            <td>
-                                {% if order.departure_yard %}
-                                    {{ order.departure_yard.yard_id }}
-                                {% else %}
-                                    <span class="status-badge status-none">없음</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if order.arrival_yard %}
-                                    {{ order.arrival_yard.yard_id }}
-                                {% else %}
-                                    <span class="status-badge status-none">없음</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if order.status == 'PENDING' %}
-                                    <span class="status-badge status-pending">Pending</span>
-                                {% elif order.status == 'COMPLETED' %}
-                                    <span class="status-badge status-completed">Completed</span>
-                                {% elif order.status == 'FAILED' %}
-                                    <span class="status-badge status-failed">Failed</span>
-                                {% else %}
-                                    <span class="status-badge status-none">{{ order.get_status_display }}</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <div class="empty-state">
-                <i class="fas fa-inbox fa-3x mb-4"></i>
-                <p>주문이 없습니다.</p>
+    <div class="main-content">
+        <div class="container">
+            <div class="header">
+                <h1>주문 목록</h1>
+                <a href="{% url 'dashboard:upload_csv' %}" class="btn">
+                    <i class="fas fa-upload"></i>
+                    CSV 업로드
+                </a>
             </div>
-        {% endif %}
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if orders|length > 0 %}
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>트럭</th>
+                                <th>샤시</th>
+                                <th>컨테이너</th>
+                                <th>트레일러</th>
+                                <th>운전자</th>
+                                <th>출발시간</th>
+                                <th>도착시간</th>
+                                <th>출발위치</th>
+                                <th>도착위치</th>
+                                <th>상태</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                                <tr>
+                                    <td>{{ order.id }}</td>
+                                    <td>{{ order.truck.serial_number|default:"없음" }}</td>
+                                    <td>{{ order.chassis.serial_number|default:"없음" }}</td>
+                                    <td>{{ order.container.serial_number|default:"없음" }}</td>
+                                    <td>{{ order.trailer.serial_number|default:"없음" }}</td>
+                                    <td>
+                                        {% if order.driver %}
+                                            {{ order.driver.driver_id }} - {{ order.driver.user.username }}
+                                        {% else %}
+                                            <span class="status-badge status-none">없음</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ order.departure_time }}</td>
+                                    <td>{{ order.arrival_time }}</td>
+                                    <td>
+                                        {% if order.departure_yard %}
+                                            {{ order.departure_yard.yard_id }}
+                                        {% else %}
+                                            <span class="status-badge status-none">없음</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if order.arrival_yard %}
+                                            {{ order.arrival_yard.yard_id }}
+                                        {% else %}
+                                            <span class="status-badge status-none">없음</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if order.status == 'PENDING' %}
+                                            <span class="status-badge status-pending">Pending</span>
+                                        {% elif order.status == 'COMPLETED' %}
+                                            <span class="status-badge status-completed">Completed</span>
+                                        {% elif order.status == 'FAILED' %}
+                                            <span class="status-badge status-failed">Failed</span>
+                                        {% else %}
+                                            <span class="status-badge status-none">{{ order.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>주문이 없습니다.</p>
+                </div>
+            {% endif %}
+        </div>
     </div>
 </body>
 </html>
