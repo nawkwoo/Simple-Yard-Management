@@ -1,76 +1,87 @@
-<!-- 네비게이션 바 -->
-<div class="sidebar">
-    <div class="nav-buttons">
-        <a href="{% url 'dashboard:home' %}" class="{% if request.path == '/dashboard/' %}active{% endif %}">HOME</a>
-        <a href="{% url 'yms_edit:equipment-list' %}" class="{% if request.path == '/yms_edit/equipment/' %}active{% endif %}">EDIT</a>
-        <a href="{% url 'yms_view:transaction-list' %}" class="{% if request.path == '/yms_view/transaction/' %}active{% endif %}">VIEW</a>
-        <a href="{% url 'dashboard:order_list' %}" class="{% if request.path == '/dashboard/order/' %}active{% endif %}">ORDER</a>
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .sidebar {
+            background-color: #2c3e50;
+            width: 180px;
+            height: 100%%;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: width 0.3s ease;
+        }
+
+        .nav-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .nav-buttons a {
+            text-decoration: none;
+            color: #ecf0f1;
+            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-buttons a::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #1abc9c;
+            transition: width 0.3s ease;
+        }
+
+        .nav-buttons a:hover::before {
+            width: 100%;
+        }
+
+        .nav-buttons a:hover {
+            color: #1abc9c;
+        }
+
+        .nav-buttons a.active {
+            color: #1abc9c;
+            font-weight: bold;
+        }
+
+        .my-page {
+            margin-top: auto;
+            text-decoration: none;
+            color: #ecf0f1;
+            font-size: 12px;
+            padding: 8px 15px;
+            border: 1px solid #ecf0f1;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .my-page:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: #1abc9c;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="nav-buttons">
+            <a href="{% url 'dashboard:home' %}" class="{% if request.path == '/dashboard/' %}active{% endif %}">HOME</a>
+            <a href="{% url 'yms_edit:equipment-list' %}" class="{% if request.path == '/yms_edit/equipment/' %}active{% endif %}">EDIT</a>
+            <a href="{% url 'yms_view:transaction-list' %}" class="{% if request.path == '/yms_view/transaction/' %}active{% endif %}">VIEW</a>
+            <a href="{% url 'dashboard:order_list' %}" class="{% if request.path == '/dashboard/order/' %}active{% endif %}">ORDER</a>
+        </div>
+        <a href="{% url 'mypage:profile' %}" class="my-page">마이 페이지</a>
     </div>
-    <a href="{% url 'mypage:profile' %}" class="my-page">마이 페이지</a>
-</div>
-
-<style>
-    /* sidebar 스타일 */
-    .sidebar {
-        background-color: #2c3e50; /* 다크 네이비 */
-        padding: 20px;
-        width: 250px;
-        height: 100vh;
-        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-        color: #ecf0f1;
-        font-family: 'Arial', sans-serif;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    /* nav-buttons 스타일 */
-    .nav-buttons {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        width: 100%;
-    }
-
-    /* 링크 스타일 */
-    .nav-buttons a {
-        text-decoration: none;
-        color: #ecf0f1;
-        font-size: 16px;
-        font-weight: bold;
-        padding: 10px 15px;
-        border-radius: 8px;
-        text-align: center;
-        transition: all 0.3s ease; /* 부드러운 애니메이션 */
-    }
-
-    /* 링크 hover 효과 */
-    .nav-buttons a:hover {
-        background-color: #34495e; /* 어두운 네이비 */
-        color: #1abc9c; /* 민트 */
-    }
-
-    /* active 상태 스타일 */
-    .nav-buttons a.active {
-        background-color: #1abc9c; /* 민트 */
-        color: #2c3e50; /* 다크 네이비 */
-    }
-
-    /* 마이 페이지 링크 스타일 */
-    .my-page {
-        margin-top: auto; /* 아래쪽에 배치 */
-        text-decoration: none;
-        color: #ecf0f1;
-        font-size: 14px;
-        padding: 10px 20px;
-        border: 2px solid #ecf0f1;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-    }
-
-    /* 마이 페이지 hover 효과 */
-    .my-page:hover {
-        background-color: #1abc9c;
-        color: #2c3e50;
-    }
-</style>
+</body>
+</html>

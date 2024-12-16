@@ -3,119 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <title>{% if view.object %}야드 수정{% else %}야드 추가{% endif %}</title>
-    <!-- 구글 지도 API 스크립트 추가 -->
     <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+                         Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            padding: 20px;
+            max-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin: 0 0 20px 0;
+            font-size: 20px;
+            font-weight: 600;
+            grid-column: 1 / -1;
+        }
+
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 4px;
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus,
+        select:focus {
+            border-color: #1abc9c;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(26, 188, 156, 0.2);
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        ul li {
+            margin: 4px 0;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 6px;
+            accent-color: #1abc9c;
+        }
+
+        .errorlist {
+            color: #e74c3c;
+            margin-top: 2px;
+            font-size: 12px;
+            padding: 0;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            background-color: #1abc9c;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #16a085;
+        }
+
+        #map-container {
+            height: 100%;
+            min-height: 400px;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        a {
+            color: #2c3e50;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        a:hover {
+            color: #1abc9c;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            body {
+                padding: 10px;
+            }
+            
+            #map-container {
+                min-height: 300px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>{% if view.object %}야드 수정{% else %}야드 추가{% endif %}</h1>
-    <form method="post" action="">
-        {% csrf_token %}
-        <p>
-            {{ form.division.label_tag }}<br>
-            {{ form.division }}
-            {% if form.division.errors %}
-                <ul class="errorlist">
-                    {% for error in form.division.errors %}
-                        <li>{{ error }}</li>
+    <div class="container">
+        <h1>{% if view.object %}야드 수정{% else %}야드 추가{% endif %}</h1>
+        
+        <form method="post" action="">
+            {% csrf_token %}
+            <p>
+                {{ form.division.label_tag }}
+                {{ form.division }}
+                {% if form.division.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.division.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </p>
+            <p>
+                {{ form.yard_id.label_tag }}
+                {{ form.yard_id }}
+                {% if form.yard_id.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.yard_id.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </p>
+            <p>
+                {{ form.address.label_tag }}
+                {{ form.address }}
+                {% if form.address.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.address.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </p>
+            <p>
+                {{ form.equipment_types.label_tag }}
+                <ul>
+                    {% for choice in form.equipment_types %}
+                        <li>{{ choice.tag }} {{ choice.choice_label }}</li>
                     {% endfor %}
                 </ul>
-            {% endif %}
-        </p>
-        <p>
-            {{ form.yard_id.label_tag }}<br>
-            {{ form.yard_id }}
-            {% if form.yard_id.errors %}
-                <ul class="errorlist">
-                    {% for error in form.yard_id.errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        </p>
-        <p>
-            {{ form.address.label_tag }}<br>
-            {{ form.address }}
-            {% if form.address.errors %}
-                <ul class="errorlist">
-                    {% for error in form.address.errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        </p>
-        <p>
-            {{ form.equipment_types.label_tag }}<br>
-            <ul>
-                {% for choice in form.equipment_types %}
-                    <li>{{ choice.tag }} {{ choice.choice_label }}</li>
-                {% endfor %}
-            </ul>
-            {% if form.equipment_types.errors %}
-                <ul class="errorlist">
-                    {% for error in form.equipment_types.errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        </p>
-        <p>
-            {{ form.is_active.label_tag }}<br>
-            {{ form.is_active }}
-            {% if form.is_active.errors %}
-                <ul class="errorlist">
-                    {% for error in form.is_active.errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        </p>
-        <!-- 숨김 필드로 위도와 경도를 추가합니다 -->
-        {{ form.latitude }}
-        {{ form.longitude }}
-        <button type="submit">
-            {% if view.object %}야드 수정{% else %}야드 생성{% endif %}
-        </button>
-    </form>
+                {% if form.equipment_types.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.equipment_types.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </p>
+            <p>
+                {{ form.is_active.label_tag }}
+                {{ form.is_active }}
+                {% if form.is_active.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.is_active.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </p>
+            {{ form.latitude }}
+            {{ form.longitude }}
+            <div class="button-group">
+                <button type="submit">
+                    {% if view.object %}야드 수정{% else %}야드 생성{% endif %}
+                </button>
+                <a href="{% url 'yms_edit:equipment-list' %}">뒤로 가기</a>
+            </div>
+        </form>
 
-    <!-- 지도 영역 추가 -->
-    <div id="map" style="width:100%; height:400px; margin-top:20px;"></div>
+        <div id="map-container">
+            <div id="map"></div>
+        </div>
+    </div>
 
-    <a href="{% url 'yms_edit:equipment-list' %}">뒤로 가기</a>
-
-    <!-- JavaScript -->
     <script>
         function initMap() {
-            // 지도 초기 설정
             var map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: 37.5665, lng: 126.9780 }, // 기본 위치 (서울)
+                center: { lat: 37.5665, lng: 126.9780 },
                 zoom: 12
             });
 
-            // 지오코더 객체 생성
             var geocoder = new google.maps.Geocoder();
 
-            // 마커 객체 생성
             var marker = new google.maps.Marker({
                 map: map,
-                draggable: true  // 마커를 드래그 가능하도록 설정
+                draggable: true
             });
 
-            // 주소 입력 필드 가져오기
             var addressField = document.getElementById("id_address");
 
-            // 주소 입력 필드 변경 시 지오코딩 수행
             addressField.addEventListener("change", function() {
                 var address = addressField.value;
                 geocodeAddress(geocoder, map, marker, address);
             });
 
-            // 마커 드래그 종료 시 위도 경도 업데이트
             marker.addListener('dragend', function() {
                 var position = marker.getPosition();
                 updateLatLngFields(position.lat(), position.lng());
             });
 
-            // 초기 위치 설정 (수정 시)
             {% if view.object and view.object.latitude and view.object.longitude %}
                 var initialPosition = { lat: {{ view.object.latitude }}, lng: {{ view.object.longitude }} };
                 marker.setPosition(initialPosition);
@@ -141,7 +288,6 @@
             document.getElementById("id_longitude").value = lng;
         }
 
-        // 페이지 로드 시 지도 초기화 함수 호출
         window.onload = function() {
             initMap();
         };

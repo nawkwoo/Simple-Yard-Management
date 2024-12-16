@@ -1,5 +1,3 @@
-<!-- templates/yms_edit/equipment_list.html -->
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -13,10 +11,9 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
                          Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             display: flex;
-            height: 100vh; /* 화면 전체 높이 */
+            height: 100vh;
+            background-color: #f8f9fa;
         }
-
-        /* 네비게이션 바 스타일은 nav.html에서 관리 */
 
         /* 메인 콘텐츠 영역 */
         .main-content {
@@ -24,30 +21,29 @@
             display: flex;
             flex-wrap: wrap;
             padding: 20px;
-            background-color: #f0f0f0;
+            gap: 20px;
             overflow-y: auto;
-            box-sizing: border-box; /* 박스 크기 계산을 정확하게 하기 위해 추가 */
-        }
-
-        /* 각 섹션 스타일 */
-        .section {
-            background-color: #fff;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin: 10px;
             box-sizing: border-box;
         }
-        .section.half {
-            width: calc(50% - 40px); /* 여백 고려 */
-            min-width: 300px;
-            height: calc(50% - 40px); /* 높이도 조절하여 2x2 그리드로 배치 */
-            overflow: hidden; /* 내용이 넘칠 경우를 대비하여 추가 */
+
+        /* 섹션 스타일 */
+        .section {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 24px;
+            box-sizing: border-box;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        /* 추가로 메인 콘텐츠 영역에 flex 속성을 조절하여 섹션들이 2x2 그리드로 배치되도록 합니다. */
-        .main-content {
-            flex-direction: row;
-            flex-wrap: wrap;
+        .section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .section.half {
+            width: calc(50% - 10px);
+            min-width: 300px;
+            height: calc(50% - 10px);
+            overflow: hidden;
         }
 
         /* 필터 버튼 스타일 */
@@ -55,80 +51,151 @@
             display: flex;
             flex-wrap: wrap;
             align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
         }
         .filter-button {
-            position: relative;
-            margin: 5px;
-            padding: 10px 15px;
-            border: 1px solid #ccc;
-            border-radius: 30px;
-            background-color: #f9f9f9;
+            padding: 8px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            background-color: #fff;
+            color: #2c3e50;
             cursor: pointer;
             display: flex;
             align-items: center;
-            transition: background-color 0.3s;
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-size: 14px;
         }
         .filter-button.active {
-            background-color: #007BFF;
+            background-color: #1abc9c;
             color: white;
-            border-color: #007BFF;
+            border-color: #1abc9c;
         }
         .filter-button:hover {
-            background-color: #e0e0e0;
+            background-color: #f5f5f5;
+            border-color: #1abc9c;
         }
+        .filter-button.active:hover {
+            background-color: #16a085;
+        }
+
         /* 플러스 아이콘 스타일 */
         .filter-button .add-icon {
-            margin-left: 5px;
-            width: 16px;
-            height: 16px;
-            background-color: #007BFF;
+            width: 20px;
+            height: 20px;
+            background-color: #1abc9c;
             color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
         }
         .filter-button .add-icon:hover {
-            background-color: #0056b3;
+            background-color: #16a085;
+            transform: scale(1.1);
         }
 
         /* 리스트 스타일 */
+        .list-container {
+            max-height: calc(100% - 60px);
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+        .list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .list-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        .list-container::-webkit-scrollbar-thumb {
+            background: #1abc9c;
+            border-radius: 3px;
+        }
         .list-item {
             display: flex;
             align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #e0e0e0;
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+            transition: all 0.2s ease;
+        }
+        .list-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(4px);
         }
         .list-item:last-child {
             border-bottom: none;
         }
         .list-item a {
             text-decoration: none;
-            color: #333;
+            color: #2c3e50;
             flex: 1;
             display: flex;
             align-items: center;
-        }
-        .list-item a:hover {
-            background-color: #f0f0f0;
+            gap: 12px;
         }
         .list-icon {
             font-size: 24px;
-            margin-right: 10px;
-        }
-        /* 스크롤 영역 */
-        .list-container {
-            max-height: calc(100% - 40px); /* 섹션 높이에 맞게 리스트 높이 조절 */
-            overflow-y: auto;
+            opacity: 0.8;
         }
 
         /* 제목 스타일 */
         h2 {
-            margin-top: 0;
+            color: #2c3e50;
+            font-size: 20px;
+            margin: 0 0 20px 0;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        h3 {
+            color: #2c3e50;
+            font-size: 16px;
+            margin: 16px 0;
+        }
+
+        /* 토글 스위치 스타일 */
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .toggle-switch-label {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            transition: background-color 0.3s ease;
+        }
+        .toggle-switch input:checked + .toggle-switch-label {
+            background-color: #1abc9c;
+        }
+        .toggle-switch-label::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+        .toggle-switch input:checked + .toggle-switch-label::after {
+            transform: translateX(20px);
+        }
+        .toggle-switch input {
+            display: none;
+        }
+
+        /* 지도 스타일 */
+        #map {
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
     </style>
 </head>
@@ -141,9 +208,8 @@
         <!-- 왼쪽 위 섹션: 지도 API 영역 -->
         <div class="section half">
             <h2>지도 영역</h2>
-            <!-- 지도 API를 위한 공간 -->
             <div id="map" style="width:100%; height:calc(100% - 40px); border-radius:10px;">
-                <!-- 여기에 지도 API를 추가할 예정입니다. -->
+                <!-- 지도 API 공간 -->
             </div>
         </div>
 
@@ -155,7 +221,7 @@
                     {% for yard in yards %}
                         <div class="list-item">
                             <a href="{% url 'yms_edit:yard-detail' pk=yard.pk %}">
-                                <span class="list-icon">🏡</span> <!-- 야드 아이콘 -->
+                                <span class="list-icon">🏡</span>
                                 {{ yard.division.name }} - {{ yard.yard_id }} ({{ yard.is_active|yesno:"활성화,비활성화" }})
                             </a>
                         </div>
@@ -169,9 +235,7 @@
         <!-- 왼쪽 아래 섹션: 필터링 영역 -->
         <div class="section half">
             <h2>필터링</h2>
-            <!-- 필터 버튼 영역 -->
             <div class="filter-buttons">
-                <!-- 야드 필터링 버튼 -->
                 <div class="filter-button {% if not selected_yard_id %}active{% endif %}" onclick="applyFilter({ yard: '' })">
                     전체 야드
                 </div>
@@ -180,7 +244,6 @@
                         {{ yard.division.name }} - {{ yard.yard_id }}
                     </div>
                 {% endfor %}
-                <!-- 야드 추가 버튼 -->
                 <div class="filter-button" onclick="addYard()">
                     야드 추가
                     <span class="add-icon">+</span>
@@ -188,15 +251,13 @@
             </div>
             <h3>장비 타입</h3>
             <div class="filter-buttons">
-                <!-- 전체 선택 토글 스위치 -->
-                <label class="toggle-switch" style="display: flex; align-items: center; margin-right: 10px;">
+                <label class="toggle-switch">
                     <input type="checkbox" id="toggle-all" {% if all_types_selected %}checked{% endif %} onchange="toggleAllTypes(this.checked)">
-                    <span class="toggle-switch-label" style="width: 40px; height: 20px; background-color: #ccc; border-radius: 10px; position: relative; margin-right: 5px;"></span>
+                    <span class="toggle-switch-label"></span>
+                    <span>전체 선택</span>
                 </label>
-                <span>전체 선택</span>
             </div>
             <div class="filter-buttons">
-                <!-- 장비 타입 필터링 버튼과 추가 아이콘 -->
                 <div class="filter-button {% if 'truck' in selected_types %}active{% endif %}" onclick="toggleTypeFilter('truck')">
                     트럭
                     <span class="add-icon" onclick="event.stopPropagation(); addEquipment('truck');">+</span>
@@ -224,8 +285,8 @@
                     {% for truck in trucks %}
                         <div class="list-item">
                             <a href="{% url 'yms_edit:equipment-detail' model='truck' pk=truck.pk %}">
-                                <span class="list-icon">🚚</span> <!-- 트럭 아이콘 -->
-                                트럭: {{ truck.truck_id }} - {{ truck.serial_number }} -  ({{ truck.is_active|yesno:"운송 가능,운송 불가" }})
+                                <span class="list-icon">🚚</span>
+                                트럭: {{ truck.truck_id }} - {{ truck.serial_number }} - ({{ truck.is_active|yesno:"운송 가능,운송 불가" }})
                             </a>
                         </div>
                     {% endfor %}
@@ -234,8 +295,8 @@
                     {% for chassis_item in chassis %}
                         <div class="list-item">
                             <a href="{% url 'yms_edit:equipment-detail' model='chassis' pk=chassis_item.pk %}">
-                                <span class="list-icon">🛞</span> <!-- 섀시 아이콘 -->
-                                섀시: {{ chassis_item.chassis_id }} - {{ chassis_item.serial_number }} -  ({{ chassis_item.is_active|yesno:"운송 가능,운송 불가" }})
+                                <span class="list-icon">🛞</span>
+                                섀시: {{ chassis_item.chassis_id }} - {{ chassis_item.serial_number }} - ({{ chassis_item.is_active|yesno:"운송 가능,운송 불가" }})
                             </a>
                         </div>
                     {% endfor %}
@@ -244,8 +305,8 @@
                     {% for container in containers %}
                         <div class="list-item">
                             <a href="{% url 'yms_edit:equipment-detail' model='container' pk=container.pk %}">
-                                <span class="list-icon">📦</span> <!-- 컨테이너 아이콘 -->
-                                컨테이너: {{ container.container_id }} - {{ container.serial_number }} -  ({{ container.is_active|yesno:"운송 가능,운송 불가" }})
+                                <span class="list-icon">📦</span>
+                                컨테이너: {{ container.container_id }} - {{ container.serial_number }} - ({{ container.is_active|yesno:"운송 가능,운송 불가" }})
                             </a>
                         </div>
                     {% endfor %}
@@ -254,8 +315,8 @@
                     {% for trailer in trailers %}
                         <div class="list-item">
                             <a href="{% url 'yms_edit:equipment-detail' model='trailer' pk=trailer.pk %}">
-                                <span class="list-icon">🚛</span> <!-- 트레일러 아이콘 -->
-                                트레일러: {{ trailer.trailer_id }} - {{ trailer.serial_number }} -  ({{ trailer.is_active|yesno:"운송 가능,운송 불가" }})
+                                <span class="list-icon">🚛</span>
+                                트레일러: {{ trailer.trailer_id }} - {{ trailer.serial_number }} - ({{ trailer.is_active|yesno:"운송 가능,운송 불가" }})
                             </a>
                         </div>
                     {% endfor %}
@@ -269,7 +330,6 @@
 
     <!-- JavaScript -->
     <script>
-        // 서버에서 전달된 selected_types를 JavaScript Set으로 변환
         const selectedTypes = new Set({% if selected_types %}{{ selected_types|safe }}{% else %}[] {% endif %});
         const allTypes = ['truck', 'chassis', 'container', 'trailer'];
 
@@ -291,30 +351,25 @@
             } else {
                 selectedTypes.add(type);
             }
-            // 전체 선택 토글 상태 업데이트
             document.getElementById('toggle-all').checked = (selectedTypes.size === allTypes.length);
             applyFilter({ types: Array.from(selectedTypes).join(',') });
         }
 
         function toggleAllTypes(checked) {
             if (checked) {
-                // 모두 선택
                 allTypes.forEach(type => selectedTypes.add(type));
             } else {
-                // 모두 해제
                 selectedTypes.clear();
             }
             applyFilter({ types: Array.from(selectedTypes).join(',') });
         }
 
-        // 장비 추가 함수
         function addEquipment(model) {
             const urlTemplate = "{% url 'yms_edit:equipment-add' model='MODEL_PLACEHOLDER' %}";
             const url = urlTemplate.replace('MODEL_PLACEHOLDER', model);
             window.location.href = url;
         }
 
-        // 야드 추가 함수
         function addYard() {
             window.location.href = "{% url 'yms_edit:yard-add' %}";
         }

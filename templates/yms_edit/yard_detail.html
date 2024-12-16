@@ -4,32 +4,229 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>야드 상세 정보</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+                         Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            padding: 20px;
+            max-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin: 0 0 20px 0;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        h2 {
+            color: #2c3e50;
+            font-size: 16px;
+            margin: 20px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .info-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            font-weight: 500;
+            width: 100px;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .info-value {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .site-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .site-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            transition: transform 0.2s ease;
+        }
+
+        .site-item:hover {
+            transform: translateX(4px);
+        }
+
+        .site-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        a {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-edit {
+            background-color: #1abc9c;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background-color: #16a085;
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-back {
+            color: #2c3e50;
+        }
+
+        .btn-back:hover {
+            color: #1abc9c;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .status-inactive {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                width: 100%;
+            }
+
+            .info-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .info-label {
+                width: 100%;
+                margin-bottom: 4px;
+            }
+
+            .button-group {
+                flex-wrap: wrap;
+            }
+
+            a {
+                flex: 1;
+                min-width: 120px;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>야드 상세 정보</h1>
+    <div class="container">
+        <h1>야드 상세 정보</h1>
 
-    <!-- 기본 정보 -->
-    <p><strong>디비전:</strong> {{ yard.division.full_name }}</p>
-    <p><strong>야드 ID:</strong> {{ yard.yard_id }}</p>
-    <p><strong>활성 상태:</strong> {{ yard.is_active|yesno:"활성화,비활성화" }}</p>
+        <div class="info-card">
+            <div class="info-row">
+                <span class="info-label">디비전</span>
+                <span class="info-value">{{ yard.division.full_name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">야드 ID</span>
+                <span class="info-value">{{ yard.yard_id }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">활성 상태</span>
+                <span class="info-value">
+                    <span class="status-badge {% if yard.is_active %}status-active{% else %}status-inactive{% endif %}">
+                        {{ yard.is_active|yesno:"활성화,비활성화" }}
+                    </span>
+                </span>
+            </div>
+        </div>
 
-    <!-- 사이트 리스트 -->
-    <h2>사이트 리스트</h2>
-    <ul>
-        {% for site in yard.sites.all %}
-            <li>
-                <strong>장비 타입:</strong> {{ site.equipment_type }} <br>
-                <strong>수용 용량:</strong> {{ site.capacity }}
-            </li>
-        {% empty %}
-            <li><em>등록된 사이트가 없습니다.</em></li>
-        {% endfor %}
-    </ul>
+        <h2>사이트 리스트</h2>
+        <div class="info-card">
+            <ul class="site-list">
+                {% for site in yard.sites.all %}
+                    <li class="site-item">
+                        <div class="site-info">
+                            <span><strong>장비 타입:</strong> {{ site.equipment_type }}</span>
+                            <span><strong>수용 용량:</strong> {{ site.capacity }}</span>
+                        </div>
+                    </li>
+                {% empty %}
+                    <li class="site-item">
+                        <em>등록된 사이트가 없습니다.</em>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
 
-    <a href="{% url 'yms_edit:yard-update' pk=yard.pk %}">수정하기</a>
-    <a href="{% url 'yms_edit:yard-delete' pk=yard.pk %}">삭제하기</a>
-
-    <!-- 뒤로 가기 -->
-    <a href="{% url 'yms_edit:equipment-list' %}">뒤로 가기</a>
+        <div class="button-group">
+            <a href="{% url 'yms_edit:yard-update' pk=yard.pk %}" class="btn-edit">수정하기</a>
+            <a href="{% url 'yms_edit:yard-delete' pk=yard.pk %}" class="btn-delete">삭제하기</a>
+            <a href="{% url 'yms_edit:equipment-list' %}" class="btn-back">뒤로 가기</a>
+        </div>
+    </div>
 </body>
 </html>

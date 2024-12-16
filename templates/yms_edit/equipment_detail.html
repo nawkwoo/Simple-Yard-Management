@@ -1,24 +1,307 @@
-<!-- templates/yms_edit/equipment_detail.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>장비 상세 정보</title>
+    <style>
+        /* 기본 스타일 */
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+                         Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            padding: 20px;
+            height: 100vh;
+            box-sizing: border-box;
+        }
 
-{% block content %}
-  <h1>{{ equipment }}</h1>
-  <p>Serial Number: {{ equipment.serial_number }}</p>
-  <p>Is Active: {{ equipment.is_active|yesno:"Yes,No" }}</p>
-  <p>Is Occupied: {{ equipment.is_occupied|yesno:"Yes,No" }}</p>
-  <!-- 기타 필드들 -->
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
 
-  <h2>Transactions</h2>
-  <ul>
-    {% for transaction in transactions %}
-      <li>
-        {{ transaction.movement_time }}: {{ transaction.details }}
-        (From: {{ transaction.departure_yard }}, To: {{ transaction.arrival_yard }})
-      </li>
-    {% empty %}
-      <li>No transactions available.</li>
-    {% endfor %}
-  </ul>
+        /* 제목 스타일 */
+        h1 {
+            color: #2c3e50;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            font-weight: 600;
+            grid-column: 1 / -1;
+        }
 
-  <a href="{% url 'yms_edit:equipment-edit' model=model_name pk=equipment.pk %}">Edit</a>
-  <a href="{% url 'yms_edit:equipment-delete' model=model_name pk=equipment.pk %}">Delete</a>
-{% endblock %}
+        h2 {
+            color: #2c3e50;
+            font-size: 16px;
+            margin: 0 0 12px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        /* 카드 스타일 */
+        .info-card {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        /* 정보 행 스타일 */
+        .info-row {
+            display: flex;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            font-weight: 500;
+            width: 100px;
+            color: #2c3e50;
+            font-size: 13px;
+        }
+
+        .info-value {
+            flex: 1;
+            font-size: 13px;
+        }
+
+        /* 트랜잭션 영역 스타일 */
+        .transaction-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 80px);
+        }
+
+        .timeline-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        /* 스크롤바 스타일 */
+        .timeline-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .timeline-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .timeline-container::-webkit-scrollbar-thumb {
+            background: #1abc9c;
+            border-radius: 3px;
+        }
+
+        /* 타임라인 스타일 */
+        .timeline {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 20px;
+            padding-bottom: 16px;
+            border-left: 2px solid #1abc9c;
+            margin-left: 12px;
+        }
+
+        .timeline-item:last-child {
+            border-left: 2px solid transparent;
+            padding-bottom: 0;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #1abc9c;
+        }
+
+        .timeline-time {
+            font-size: 11px;
+            color: #7f8c8d;
+            margin-bottom: 2px;
+        }
+
+        .timeline-content {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .timeline-route {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+            color: #666;
+            font-size: 11px;
+        }
+
+        .timeline-arrow {
+            color: #1abc9c;
+        }
+
+        /* 상태 뱃지 스타일 */
+        .status-badge {
+            padding: 3px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-right: 4px;
+        }
+
+        .status-active { background-color: #2ecc71; color: white; }
+        .status-inactive { background-color: #95a5a6; color: white; }
+        .status-occupied { background-color: #e74c3c; color: white; }
+        .status-available { background-color: #3498db; color: white; }
+
+        /* 버튼 그룹 스타일 */
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 0 16px 16px 16px;
+        }
+
+        /* 링크 버튼 스타일 */
+        a {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-edit {
+            background-color: #1abc9c;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background-color: #16a085;
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-back {
+            color: #2c3e50;
+        }
+
+        .btn-back:hover {
+            color: #1abc9c;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+                gap: 15px;
+            }
+            
+            .transaction-container {
+                height: 400px;
+            }
+
+            .button-group {
+                padding: 0;
+                margin-top: 15px;
+            }
+
+            a {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{{ equipment }}</h1>
+
+        <!-- 기본 정보 섹션 -->
+        <div>
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">Serial Number</span>
+                    <span class="info-value">{{ equipment.serial_number }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status</span>
+                    <span class="info-value">
+                        <span class="status-badge {% if equipment.is_active %}status-active{% else %}status-inactive{% endif %}">
+                            {{ equipment.is_active|yesno:"Active,Inactive" }}
+                        </span>
+                        <span class="status-badge {% if equipment.is_occupied %}status-occupied{% else %}status-available{% endif %}">
+                            {{ equipment.is_occupied|yesno:"Occupied,Available" }}
+                        </span>
+                    </span>
+                </div>
+            </div>
+            <div class="button-group">
+                <a href="{% url 'yms_edit:equipment-edit' model=model_name pk=equipment.pk %}" class="btn-edit">Edit</a>
+                <a href="{% url 'yms_edit:equipment-delete' model=model_name pk=equipment.pk %}" class="btn-delete">Delete</a>
+                <a href="{% url 'yms_edit:equipment-list' %}" class="btn-back">Back</a>
+            </div>
+        </div>
+
+        <!-- 트랜잭션 섹션 -->
+        <div class="transaction-container">
+            <div class="info-card" style="height: 100%;">
+                <h2>Transactions</h2>
+                <div class="timeline-container">
+                    <ul class="timeline">
+                        {% for transaction in transactions %}
+                            <li class="timeline-item">
+                                <div class="timeline-time">{{ transaction.movement_time }}</div>
+                                <div class="timeline-content">
+                                    {{ transaction.details }}
+                                    <div class="timeline-route">
+                                        {{ transaction.departure_yard }} 
+                                        <span class="timeline-arrow">→</span> 
+                                        {{ transaction.arrival_yard }}
+                                    </div>
+                                </div>
+                            </li>
+                        {% empty %}
+                            <li class="timeline-item">
+                                <div class="timeline-content">
+                                    No transactions available.
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
