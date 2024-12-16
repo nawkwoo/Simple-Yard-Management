@@ -815,9 +815,93 @@
         // 페이지 로드 시 초기화
         window.onload = function () {
             updateDivision("LA"); // 기본 divisionName으로 호출
+            // 일정 주기로 함수 호출 (5초마다 호출 예시)
+            const interval = 5000; // 주기: 5000ms (5초)
+            setInterval(updateAllEquipmentsToYard, interval);
+        }
+
+        async function updateAllEquipmentsToYard() {
+            clearEquipmentCells();
+            try {
+                // GET 요청, queryString으로 division_name 전달
+                const selectedYardId = document.getElementById("yard-select").value;
+                const response = await fetch(`/view/transactions/equipments/?yard_id=${encodeURIComponent(selectedYardId)}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken') // CSRF Token 설정
+                    }
+                });
+                // 응답 처리
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    console.log("data", data);
+                    //clearYardEquipments();
+                    // trucks 데이터 추출
+                    const trucks = data.equipments.trucks;
+                    // 1. trucks 정보 출력
+                    console.log("Trucks Information:");
+                    trucks.forEach(item => {
+                        console.log(`ID: ${item.id}, Type: ${item.equipment_type}, Equipment ID: ${item.equipment_id}, Available: ${item.is_available}, Position: ${item.position}`);
+                        if(item.is_available) {
+                            const obj =  document.getElementById("truck-space-position"+item.position);
+                            obj.classList.add('occupied');
+                        }
+                    });
+                    const chassis = data.equipments.chassis;
+                    // 1. Chassis 정보 출력
+                    console.log("Chassis Information:");
+                    chassis.forEach(item => {
+                        console.log(`ID: ${item.id}, Type: ${item.equipment_type}, Equipment ID: ${item.equipment_id}, Available: ${item.is_available}, Position: ${item.position}`);
+                        if(item.is_available) {
+                            const tagId = "chassis-space-position"+item.position;
+                            const obj =  document.getElementById(tagId);
+                            //const divElement = obj.querySelector('div');
+                            // div 태그에 클래스 추가
+                            if (obj) {
+                                obj.classList.add('grid-cell', 'occupied');
+                            }
+                        }
+                    });
+                    const containers = data.equipments.containers;
+                    // 1. Container 정보 출력
+                    console.log("Container Information:");
+                    containers.forEach(item => {
+                        console.log(`ID: ${item.id}, Type: ${item.equipment_type}, Equipment ID: ${item.equipment_id}, Available: ${item.is_available}, Position: ${item.position}`);
+                        if(item.is_available) {
+                            const tagId = "container-space-position"+item.position;
+                            const obj =  document.getElementById(tagId);
+                            //const divElement = obj.querySelector('div');
+                            // div 태그에 클래스 추가
+                            if (obj) {
+                                obj.classList.add('grid-cell', 'occupied');
+                            }
+                        }
+                    });
+                    const trailers = data.equipments.trailers;
+                    // 1. Trailer 정보 출력
+                    console.log("Trailer Information:");
+                    trailers.forEach(item => {
+                        console.log(`ID: ${item.id}, Type: ${item.equipment_type}, Equipment ID: ${item.equipment_id}, Available: ${item.is_available}, Position: ${item.position}`);
+                        if(item.is_available) {
+                            const tagId = "trailer-space-position"+item.position;
+                            const obj =  document.getElementById(tagId);
+                            // tuckObj 하위에 있는 div 태그를 선택
+                            //const divElement = obj.querySelector('div');
+                            // div 태그에 클래스 추가
+                            if (obj) {
+                                obj.classList.add('grid-cell', 'occupied');
+                            }
+                        }
+                    });
+                }                     
+            } catch (error) {
+                console.error("Error:", error);
+            } 
         }
 
         async function updateYard() {
+            clearYardEquipments();
             const selectedYardId = document.getElementById("yard-select").value;
             try {
                 // GET 요청, queryString으로 division_name 전달
@@ -834,33 +918,33 @@
                     timelineContainer.innerHTML = ''; // 기존 내용 초기화
                     
                     // 데이터를 기반으로 타임라인 항목을 동적으로 추가
-                     data.transactions.forEach(item => {
+                    data.transactions.forEach(item => {
                         const timelineItem = document.createElement('div');
-                        timelineItem.textContent = `${item.movement_time} / ${item.equipment_type} / ${item.truck_id} / ${item.type}`;
+                    
+                        // UTC 시간 문자열을 Date 객체로 변환
+                        const utcDate = new Date(item.movement_time);
+                    
+                        // UTC+9로 변환
+                        const kstOffset = 9 * 60; // 9시간(분 단위)
+                        const localDate = new Date(utcDate.getTime() + kstOffset * 60 * 1000);
+                    
+                        // 변환된 시간을 문자열로 포맷
+                        const formattedTime = localDate.toISOString().replace('T', ' ').substring(0, 19);
+                    
+                        // 출력 텍스트 설정
+                        timelineItem.textContent = `${formattedTime} / ${item.equipment_type} / ${item.truck_id} / ${item.type}`;
+                        
+                        // 컨테이너에 추가
                         timelineContainer.appendChild(timelineItem);
                     });
+                    
                     setTimelineEvent();
                 }
             } catch (error) {
                 console.error("Error:", error);
             } 
 
-            try {
-                // GET 요청, queryString으로 division_name 전달
-                const response = await fetch(`/view/transactions/equipments/?yard_id=${encodeURIComponent(selectedYardId)}`, {
-                    method: 'GET',
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken') // CSRF Token 설정
-                    }
-                });
-                // 응답 처리
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log("data", data);
-                } 
-            } catch (error) {
-                console.error("Error:", error);
-            } 
+           updateAllEquipmentsToYard();
         }
 
         async function updateDivision(division_name) {
@@ -919,118 +1003,95 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            function generateCells(containerSelector, count) {
-                const container = document.querySelector(containerSelector);
-                let occupiedCount = 0;
-                
+        function clearEquipmentCells(containerSelector, count) {
+            console.log("clearEquipmentCells:containerSelector=" + containerSelector);
+            const container = document.querySelector(containerSelector);
+            let occupiedCount = 0;
+            
+            if(container) {
                 const titleSpan = container.querySelector('.sector-title .occupied-count');
+                if (titleSpan) {
+                    titleSpan.textContent = occupiedCount;
+                }
+
+                var obj = null;
+                var tagId = "";
+                var baseTagId = containerSelector.includes('container') ? "container-space-position" :
+                                containerSelector.includes('trailer') ? "trailer-space-position" :
+                                containerSelector.includes('chassis') ? "chassis-space-position" : "";
+                for( let i=1; i<=count; i++){
+                    //const cell = document.createElement('div');
+                    tagId = baseTagId+i;
+                    cell = document.getElementById(tagId);
+                    cell.textContent = i;
+                    //cell.id = tagId;
+                    cell.classList.remove('occupied');
+                    //obj.appendChild(cell);  
+                }   
+            }
+        }
+        function makeEquipmentCells(containerSelector, count) {
+            console.log("makeEquipmentCells:containerSelector=" + containerSelector);
+            const container = document.querySelector(containerSelector);
+            let occupiedCount = 0;
+            if(container) {
+                // Store the sector title before clearing
+                const sectorTitle = container.querySelector('.sector-title');
+                const titleSpan = sectorTitle.querySelector('.occupied-count');
                 
+                // Clear container content except the sector title
+                while (container.lastChild) {
+                    if (container.lastChild === sectorTitle) {
+                        break;
+                    }
+                    container.removeChild(container.lastChild);
+                }
+                
+                var baseTagId = containerSelector.includes('container') ? "container-space-position" :
+                                containerSelector.includes('trailer') ? "trailer-space-position" :
+                                containerSelector.includes('chassis') ? "chassis-space-position" : "";
                 for (let i = 1; i <= count; i++) {
                     const cell = document.createElement('div');
-                    const isOccupied = Math.random() > 0.5;
-                    if (isOccupied) {
-                        cell.className = 'grid-cell occupied';
-                        occupiedCount++;
-                    } else {
-                        cell.className = 'grid-cell';
-                    }
+                    cell.id = baseTagId+i;
+                    cell.className = 'grid-cell';   // sta2002
                     cell.textContent = i;
                     container.appendChild(cell);
                 }
-                
+                            
                 if (titleSpan) {
                     titleSpan.textContent = occupiedCount;
                 }
             }
-            function generateParking() {
-                let occupiedCount = 0;
-                const verticalSpaces = document.querySelectorAll('.parking-column .parking-space');
-                const horizontalSpaces = document.querySelectorAll('.parking-column2 .parking-space2');
-                const titleSpan = document.querySelector('.left-area .sector-title .occupied-count');
-                
-                // 왼쪽 상단 세로열: 1-5 (아래에서 위로)
-                const leftTopSpaces = Array.from(verticalSpaces).slice(0, 5);
-                leftTopSpaces.forEach((space, index) => {
-                    const number = 5 - index;  // 5부터 1까지
-                    space.textContent = number;
-                    const isOccupied = Math.random() > 0.5;
-                    if (isOccupied) {
-                        space.classList.add('occupied');
-                        occupiedCount++;
-                    }
-                });
-                
-                // 상단 가로열: 6-10 (왼쪽에서 오른쪽으로)
-                const topSpaces = Array.from(horizontalSpaces).slice(0, 5);
-                topSpaces.forEach((space, index) => {
-                    const number = index + 6;  // 6부터 10까지
-                    space.textContent = number;
-                    const isOccupied = Math.random() > 0.5;
-                    if (isOccupied) {
-                        space.classList.add('occupied');
-                        occupiedCount++;
-                    }
-                });
-                
-                // 오른쪽 상단 세로열: 11-15 (위에서 아래로)
-                const rightTopSpaces = Array.from(verticalSpaces).slice(5, 10);
-                rightTopSpaces.forEach((space, index) => {
-                    const number = index + 11;  // 11부터 15까지
-                    space.textContent = number;
-                    const isOccupied = Math.random() > 0.5;
-                    if (isOccupied) {
-                        space.classList.add('occupied');
-                        occupiedCount++;
-                    }
-                });
-                
-                // 오른쪽 하단 세로열: 26-30 (아래에서 위로)
-                const rightBottomSpaces = Array.from(verticalSpaces).slice(15);  // slice(15)로 수정
-                rightBottomSpaces.forEach((space, index) => {
-                    const number = index + 16;  // 30부터 26까지
-                    space.textContent = number;
-                    const isOccupied = Math.random() > 0.5;
-                    if (isOccupied) {
-                        space.classList.add('occupied');
-                        occupiedCount++;
-                    }
-                });
-                
-                // 하단 가로열: 21-25 (오른쪽에서 왼쪽으로)
-                const bottomSpaces = Array.from(horizontalSpaces).slice(5);
-                bottomSpaces.forEach((space, index) => {
-                    const number = 25 - index;  // 25부터 21까지
-                    space.textContent = number;
-                    const isOccupied = Math.random() > 0.5;
-                    if (isOccupied) {
-                        space.classList.add('occupied');
-                        occupiedCount++;
-                    }
-                });
-                
-                // 왼쪽 하단 세로열: 26-30 (아래에서 위로)
-                // 왼쪽 하단 세로열: 16-20 (위에서 아래로)
-                const leftBottomSpaces = Array.from(verticalSpaces).slice(10, 15);  // slice(10, 15)로 수정
-                leftBottomSpaces.forEach((space, index) => {
-                    const number = 30 - index;  // 16부터 20까지
-                    space.textContent = number;
-                    const isOccupied = Math.random() > 0.5;
-                    if (isOccupied) {
-                        space.classList.add('occupied');
-                        occupiedCount++;
-                    }
-                });
-                
-                if (titleSpan) {
-                    titleSpan.textContent = occupiedCount;
-                }
+        }            
+        function clearTruckParking() {
+            let occupiedCount = 0;
+            const titleSpan = document.querySelector('.left-area .sector-title .occupied-count');
+            if (titleSpan) {
+                titleSpan.textContent = occupiedCount;
             }
-
-            generateCells('.container-area', 40);
-            generateCells('.trailer-area', 10);
-            generateCells('.chassis-area', 20);
-            generateParking();
+            var obj = null;
+            var truckId = "";
+            var baseTagId = "truck-space-position";
+            for( let i=1; i<=30; i++){
+                truckId = baseTagId+i;
+                obj = document.getElementById(truckId);
+                obj.classList.remove('occupied');
+                obj.textContent = i;
+            }       
+        }
+        function clearYardEquipments() {
+            makeEquipmentCells('.container-area', 40);
+            makeEquipmentCells('.trailer-area', 10);
+            makeEquipmentCells('.chassis-area', 20);
+            
+            clearEquipmentCells('.container-area', 40);
+            clearEquipmentCells('.trailer-area', 10);
+            clearEquipmentCells('.chassis-area', 20);
+            
+            clearTruckParking();
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            clearYardEquipments();
         });
 
         /* JavaScript에 추가할 코드 */
@@ -1082,107 +1143,7 @@
         updateTime();
         const timeInterval = setInterval(updateTime, 1000);
 
-        function generateCells(containerSelector, count) {
-            const container = document.querySelector(containerSelector);
-            let occupiedCount = 0;
-            
-            const titleSpan = container.querySelector('.sector-title .occupied-count');
-            
-            // Equipment type specific data
-            const containerData = {
-                ids: ['ABCU1234567', 'BICU7654321', 'CMAU2468135'],
-                sizes: ['40ST', '40HC', '20ST', '45HC'],
-                types: ['DRY', 'REEFER', 'FLAT RACK', 'ISO TANK', 'OPEN TOP', 'TRI DOOR']
-            };
-            
-            const trailerData = {
-                ids: ['TRLU123456', 'TRAU654321', 'TRBU246813'],
-                sizes: ["53'", "48'"]
-            };
-            
-            const chassisData = {
-                ids: ['CHSS', 'CHSA', 'CHSB'],
-                types: ['Regular', 'Light', 'Tandem', 'Tri Axle']
-            };
-            
-            function getRandomElement(array) {
-                return array[Math.floor(Math.random() * array.length)];
-            }
-            
-            for (let i = 1; i <= count; i++) {
-                const cell = document.createElement('div');
-                const isOccupied = Math.random() > 0.5;
-                if (isOccupied) {
-                    cell.className = 'grid-cell occupied';
-                    occupiedCount++;
-                    
-                    // Add click event and equipment data
-                    cell.addEventListener('click', () => {
-                        const equipmentModal = document.getElementById('equipmentModal');
-                        const modalContent = document.getElementById('modalContent');
-                        
-                        let modalHTML = '<div class="modal-body">';
-                        
-                        if (containerSelector.includes('container')) {
-                            const id = getRandomElement(containerData.ids);
-                            modalHTML += `
-                                <h3>Container Information</h3>
-                                <div class="info-grid">
-                                    <span class="info-label">Location:</span>
-                                    <span class="info-value">Position ${i}</span>
-                                    <span class="info-label">ID:</span>
-                                    <span class="info-value">${id}</span>
-                                    <span class="info-label">Size:</span>
-                                    <span class="info-value">${getRandomElement(containerData.sizes)}</span>
-                                    <span class="info-label">Type:</span>
-                                    <span class="info-value">${getRandomElement(containerData.types)}</span>
-                                </div>
-                            `;
-                        } else if (containerSelector.includes('trailer')) {
-                            const id = getRandomElement(trailerData.ids);
-                            modalHTML += `
-                                <h3>Trailer Information</h3>
-                                <div class="info-grid">
-                                    <span class="info-label">Location:</span>
-                                    <span class="info-value">Position ${i}</span>
-                                    <span class="info-label">ID:</span>
-                                    <span class="info-value">${id}</span>
-                                    <span class="info-label">Size:</span>
-                                    <span class="info-value">${getRandomElement(trailerData.sizes)}</span>
-                                </div>
-                            `;
-                        } else if (containerSelector.includes('chassis')) {
-                            const id = getRandomElement(chassisData.ids);
-                            modalHTML += `
-                                <h3>Chassis Information</h3>
-                                <div class="info-grid">
-                                    <span class="info-label">Location:</span>
-                                    <span class="info-value">Position ${i}</span>
-                                    <span class="info-label">ID:</span>
-                                    <span class="info-value">${id}</span>
-                                    <span class="info-label">Type:</span>
-                                    <span class="info-value">${getRandomElement(chassisData.types)}</span>
-                                </div>
-                            `;
-                        }
-                        
-                        modalHTML += '</div>';
-                        modalContent.innerHTML = modalHTML;
-                        equipmentModal.style.display = 'block';
-                    });
-                } else {
-                    cell.className = 'grid-cell';
-                }
-                cell.textContent = i;
-                container.appendChild(cell);
-            }
-            
-            if (titleSpan) {
-                titleSpan.textContent = occupiedCount;
-            }
-        }
-        
-        document.addEventListener('DOMContentLoaded', function() {
+        {% comment %} document.addEventListener('DOMContentLoaded', function() {
             function generateCells(containerSelector, count) {
                 const container = document.querySelector(containerSelector);
                 let occupiedCount = 0;
@@ -1219,10 +1180,11 @@
                     return array[Math.floor(Math.random() * array.length)];
                 }
                 
+                
                 for (let i = 1; i <= count; i++) {
                     const cell = document.createElement('div');
                     const isOccupied = Math.random() > 0.5;
-                    
+                    //isOccupied = false; // sta2002
                     if (isOccupied) {
                         cell.className = 'grid-cell occupied';
                         occupiedCount++;
@@ -1251,7 +1213,7 @@
                                 `;
                             } else if (containerSelector.includes('trailer')) {
                                 const id = getRandomElement(trailerData.ids);
-                                content += `
+                                content += ` 
                                     <h3>Trailer Information</h3>
                                     <div class="info-grid">
                                         <span class="info-label">Location:</span>
@@ -1285,6 +1247,7 @@
                         cell.className = 'grid-cell';
                     }
                     
+                    cell.className = 'grid-cell';   // sta2002
                     cell.textContent = i;
                     container.appendChild(cell);
                 }
@@ -1319,7 +1282,7 @@
                     modal.style.display = "none";
                 }
             }
-        });
+        }); {% endcomment %}
     </script>
 
     <div id="equipmentModal" class="modal">

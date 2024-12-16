@@ -53,7 +53,7 @@ class EquipmentListView(View):
         response_data = {
             "trucks": get_inventory('Truck'),
             "chassis": get_inventory('Chassis'),
-            "container": get_inventory('Container'),
+            "containers": get_inventory('Container'),
             "trailers": get_inventory('Trailer'),
         }
 
