@@ -90,29 +90,67 @@ class YardListView(View):
         yard_id = Yard.objects.get(yard_id=yard_id).id
         # yard_id를 기준으로 Transaction을 필터링하고, Truck 모델을 함께 조인
         transactions_equipment_in = Transaction.objects.filter(
-            Q(arrival_yard_id=yard_id)
+            Q(arrival_yard_id=yard_id) & Q(details__contains='완료')
         ).select_related('truck')  # 'truck'은 Transaction 모델에서 Truck 외래 키 필드 이름
-
         result_in = []
         for transaction in transactions_equipment_in:
+            departure_yard_id = Yard.objects.filter(
+                Q(id=transaction.departure_yard_id)
+            ).first().yard_id
+            arrival_yard_id = Yard.objects.filter(
+                Q(id=transaction.arrival_yard_id)
+            ).first().yard_id
+
+            equipment_id = None
+            if transaction.equipment_type == 'Truck':
+                equipment_id = transaction.truck.truck_id if transaction.truck else None
+            elif transaction.equipment_type == 'Chassis':
+                equipment_id = transaction.chassis.chassis_id if transaction.chassis else None
+            elif transaction.equipment_type == 'Container':
+                equipment_id = transaction.container.container_id if transaction.container else None
+            elif transaction.equipment_type == 'Trailer':
+                equipment_id = transaction.trailer.trailer_id if transaction.trailer else None
+
             result_in.append({
                 'movement_time': transaction.movement_time,
                 'equipment_type': transaction.equipment_type,
-                'truck_id': transaction.truck.truck_id if transaction.truck else None,
-                'type': 'in'  # 'type' 필드 추가
+                'equipment_id': equipment_id,
+                'departure_yard_id': departure_yard_id,
+                'arrival_yard_id': arrival_yard_id,
+                'type': 'IN'  # 'type' 필드 추가
             })
 
         # yard_id를 기준으로 Transaction을 필터링하고, Truck 모델을 함께 조인
         transactions_equipment_out = Transaction.objects.filter(
-            Q(departure_yard_id=yard_id)
+            Q(departure_yard_id=yard_id) & Q(details__contains='시작')
         ).select_related('truck')  # 'truck'은 Transaction 모델에서 Truck 외래 키 필드 이름
+
         result_out = []
         for transaction in transactions_equipment_out:
+            departure_yard_id = Yard.objects.filter(
+                Q(id=transaction.departure_yard_id)
+            ).first().yard_id
+            arrival_yard_id = Yard.objects.filter(
+                Q(id=transaction.arrival_yard_id)
+            ).first().yard_id
+
+            equipment_id = None
+            if transaction.equipment_type == 'Truck':
+                equipment_id = transaction.truck.truck_id if transaction.truck else None
+            elif transaction.equipment_type == 'Chassis':
+                equipment_id = transaction.chassis.chassis_id if transaction.chassis else None
+            elif transaction.equipment_type == 'Container':
+                equipment_id = transaction.container.container_id if transaction.container else None
+            elif transaction.equipment_type == 'Trailer':
+                equipment_id = transaction.trailer.trailer_id if transaction.trailer else None
+
             result_out.append({
                 'movement_time': transaction.movement_time,
                 'equipment_type': transaction.equipment_type,
-                'truck_id': transaction.truck.truck_id if transaction.truck else None,
-                'type': 'out'  # 'type' 필드 추가
+                'equipment_id': equipment_id,
+                'departure_yard_id': departure_yard_id,
+                'arrival_yard_id': arrival_yard_id,
+                'type': 'OUT'  # 'type' 필드 추가
             })
         combined_result = result_in + result_out
         # 'movement_time'을 기준으로 오름차순으로 정렬합니다.

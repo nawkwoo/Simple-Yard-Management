@@ -334,6 +334,43 @@ class OrderTableMonitor:
                                         "movement_time": datetime.now(timezone.utc),
                                     },
                                 )
+
+                                if order.chassis:
+                                    Transaction.objects.create(
+                                        order_id=order.id,
+                                        equipment_type=order.chassis.__class__.__name__,
+                                        truck=order.truck if isinstance(order.truck, Truck) else None,
+                                        chassis=order.chassis if isinstance(order.chassis, Chassis) else None,
+                                        departure_yard=order.departure_yard,
+                                        arrival_yard=order.arrival_yard,
+                                        details=f"장비 {order.chassis.serial_number} Chassis 이동 시작.",
+                                        movement_time=datetime.now(timezone.utc)
+                                    )
+
+                                if order.container:
+                                    Transaction.objects.create(
+                                        order_id=order.id,
+                                        equipment_type=order.container.__class__.__name__,
+                                        truck=order.truck if isinstance(order.truck, Truck) else None,
+                                        container=order.container if isinstance(order.container, Container) else None,
+                                        departure_yard=order.departure_yard,
+                                        arrival_yard=order.arrival_yard,
+                                        details=f"장비 {order.container.serial_number} Container 이동 시작.",
+                                        movement_time=datetime.now(timezone.utc)
+                                    )
+
+                                if order.trailer:
+                                    Transaction.objects.create(
+                                        order_id=order.id,
+                                        equipment_type=order.trailer.__class__.__name__,
+                                        truck=order.truck if isinstance(order.truck, Truck) else None,
+                                        trailer=order.trailer if isinstance(order.trailer, Trailer) else None,
+                                        departure_yard=order.departure_yard,
+                                        arrival_yard=order.arrival_yard,
+                                        details=f"장비 {order.trailer.serial_number} Trailer 이동 시작.",
+                                        movement_time=datetime.now(timezone.utc)
+                                    )
+
                                 order.status_move = order.MOVE_STATUS_DEPARTURED
                                 order.save()
 
@@ -359,6 +396,42 @@ class OrderTableMonitor:
                                     details=f"장비 {order.truck.serial_number} Truck 이동 완료." if order.truck else "자가용 이동 완료.",
                                     movement_time=datetime.now(timezone.utc)
                                 )
+                                if order.chassis:
+                                    Transaction.objects.create(
+                                        order_id=order.id,
+                                        equipment_type=order.chassis.__class__.__name__,
+                                        truck=order.truck if isinstance(order.truck, Truck) else None,
+                                        chassis=order.chassis if isinstance(order.chassis, Chassis) else None,
+                                        departure_yard=order.departure_yard,
+                                        arrival_yard=order.arrival_yard,
+                                        details=f"장비 {order.chassis.serial_number} Chassis 이동 완료.",
+                                        movement_time=datetime.now(timezone.utc)
+                                    )
+
+                                if order.container:
+                                    Transaction.objects.create(
+                                        order_id=order.id,
+                                        equipment_type=order.container.__class__.__name__,
+                                        truck=order.truck if isinstance(order.truck, Truck) else None,
+                                        container=order.container if isinstance(order.container, Container) else None,
+                                        departure_yard=order.departure_yard,
+                                        arrival_yard=order.arrival_yard,
+                                        details=f"장비 {order.container.serial_number} Container 이동 완료.",
+                                        movement_time=datetime.now(timezone.utc)
+                                    )
+
+                                if order.trailer:
+                                    Transaction.objects.create(
+                                        order_id=order.id,
+                                        equipment_type=order.trailer.__class__.__name__,
+                                        truck=order.truck if isinstance(order.truck, Truck) else None,
+                                        trailer=order.trailer if isinstance(order.trailer, Trailer) else None,
+                                        departure_yard=order.departure_yard,
+                                        arrival_yard=order.arrival_yard,
+                                        details=f"장비 {order.trailer.serial_number} Trailer 이동 완료.",
+                                        movement_time=datetime.now(timezone.utc)
+                                    )
+
                                 order.status_move = order.MOVE_STATUS_ARRIVED
                                 order.save()                            
 

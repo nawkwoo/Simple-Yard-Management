@@ -75,7 +75,7 @@
             padding: 8px;
             border: 1px solid #e9ecef;
             font-size: 13px;
-            width: 400px;
+            width: 450px;
             height: 100px;
             overflow-y: scroll;
             position: relative;
@@ -932,7 +932,7 @@
                         const formattedTime = localDate.toISOString().replace('T', ' ').substring(0, 19);
                     
                         // 출력 텍스트 설정
-                        timelineItem.textContent = `${formattedTime} / ${item.equipment_type} / ${item.truck_id} / ${item.type}`;
+                        timelineItem.textContent = `${formattedTime} / ${item.equipment_type} / ${item.equipment_id} / ${item.type} / ${item.departure_yard_id} to ${item.arrival_yard_id}`;
                         
                         // 컨테이너에 추가
                         timelineContainer.appendChild(timelineItem);
