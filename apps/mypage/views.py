@@ -4,13 +4,17 @@ from django.contrib import messages
 from .forms import ProfileEditForm, CustomUserEditForm
 
 
+# @login_required
+# def profile_view(request):
+#     """
+#     사용자 프로필을 보여주는 뷰.
+#     """
+#     return render(request, 'mypage/profile.html', {'user': request.user})
+
 @login_required
 def profile_view(request):
-    """
-    사용자 프로필을 보여주는 뷰.
-    """
-    return render(request, 'mypage/profile.html', {'user': request.user})
-
+    profile = request.user.profile
+    return render(request, 'mypage/profile.html', {'user': request.user, 'profile': profile})
 
 @login_required
 def edit_profile_view(request):

@@ -5,15 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>장비 상세 정보</title>
     <style>
-        /* 기본 스타일 */
-        body {
+        html, body {
             margin: 0;
+            padding: 0;
+            height: 100%;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
                          Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
             background-color: #f8f9fa;
             color: #2c3e50;
-            padding: 16px;
-            height: 100vh;
+            display: flex;
+        }
+
+        .main-content {
+            flex: 1;
+            {% comment %} margin-left: 180px; {% endcomment %}
+            padding: 32px;
+            min-height: 100vh;
             box-sizing: border-box;
         }
 
@@ -24,7 +34,6 @@
             grid-template-columns: 320px 1fr;
             grid-template-rows: auto 1fr;
             gap: 16px;
-            height: calc(100vh - 32px);
         }
 
         /* 제목 스타일 */
@@ -49,7 +58,7 @@
         .info-card {
             background: white;
             padding: 14px;
-            border-radius: 6px;
+            border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
 
@@ -206,8 +215,8 @@
         a {
             display: inline-flex;
             align-items: center;
-            padding: 6px 12px;
-            border-radius: 4px;
+            padding: 8px 16px;
+            border-radius: 5px;
             text-decoration: none;
             font-size: 13px;
             font-weight: 500;
@@ -221,6 +230,8 @@
 
         .btn-edit:hover {
             background-color: #16a085;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .btn-delete {
@@ -230,18 +241,31 @@
 
         .btn-delete:hover {
             background-color: #c0392b;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .btn-back {
             color: #2c3e50;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
         }
 
         .btn-back:hover {
             color: #1abc9c;
+            background: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         /* 반응형 디자인 */
         @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+                padding-bottom: 80px;
+            }
+
             .container {
                 grid-template-columns: 1fr;
                 height: auto;
@@ -268,63 +292,67 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>{{ equipment }}</h1>
+    {% include 'nav.html' %}
+    
+    <div class="main-content">
+        <div class="container">
+            <h1>{{ equipment }}</h1>
 
-        <!-- 기본 정보 섹션 -->
-        <div class="info-section">
-            <div class="info-card">
-                <div class="info-row">
-                    <span class="info-label">Serial Number</span>
-                    <span class="info-value">{{ equipment.serial_number }}</span>
+            <!-- 기본 정보 섹션 -->
+            <div class="info-section">
+                <div class="info-card">
+                    <div class="info-row">
+                        <span class="info-label">Serial Number</span>
+                        <span class="info-value">{{ equipment.serial_number }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Status</span>
+                        <span class="info-value">
+                            <span class="status-badge {% if equipment.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                {{ equipment.is_active|yesno:"Active,Inactive" }}
+                            </span>
+                            <span class="status-badge {% if equipment.is_occupied %}status-occupied{% else %}status-available{% endif %}">
+                                {{ equipment.is_occupied|yesno:"Occupied,Available" }}
+                            </span>
+                        </span>
+                    </div>
                 </div>
-                <div class="info-row">
-                    <span class="info-label">Status</span>
-                    <span class="info-value">
-                        <span class="status-badge {% if equipment.is_active %}status-active{% else %}status-inactive{% endif %}">
-                            {{ equipment.is_active|yesno:"Active,Inactive" }}
-                        </span>
-                        <span class="status-badge {% if equipment.is_occupied %}status-occupied{% else %}status-available{% endif %}">
-                            {{ equipment.is_occupied|yesno:"Occupied,Available" }}
-                        </span>
-                    </span>
+                <div class="info-card">
+                    <div class="button-group">
+                        <a href="{% url 'yms_edit:equipment-edit' model=model_name pk=equipment.pk %}" class="btn-edit">Edit</a>
+                        <a href="{% url 'yms_edit:equipment-delete' model=model_name pk=equipment.pk %}" class="btn-delete">Delete</a>
+                        <a href="{% url 'yms_edit:equipment-list' %}" class="btn-back">Back</a>
+                    </div>
                 </div>
             </div>
-            <div class="info-card">
-                <div class="button-group">
-                    <a href="{% url 'yms_edit:equipment-edit' model=model_name pk=equipment.pk %}" class="btn-edit">Edit</a>
-                    <a href="{% url 'yms_edit:equipment-delete' model=model_name pk=equipment.pk %}" class="btn-delete">Delete</a>
-                    <a href="{% url 'yms_edit:equipment-list' %}" class="btn-back">Back</a>
-                </div>
-            </div>
-        </div>
 
-        <!-- 트랜잭션 섹션 -->
-        <div class="transaction-container">
-            <div class="info-card">
-                <h2>Transactions</h2>
-                <div class="timeline-container">
-                    <ul class="timeline">
-                        {% for transaction in transactions %}
-                            <li class="timeline-item">
-                                <div class="timeline-time">{{ transaction.movement_time }}</div>
-                                <div class="timeline-content">
-                                    {{ transaction.details }}
-                                    <div class="timeline-route">
-                                        {{ transaction.departure_yard }} 
-                                        <span class="timeline-arrow">→</span> 
-                                        {{ transaction.arrival_yard }}
+            <!-- 트랜잭션 섹션 -->
+            <div class="transaction-container">
+                <div class="info-card">
+                    <h2>Transactions</h2>
+                    <div class="timeline-container">
+                        <ul class="timeline">
+                            {% for transaction in transactions %}
+                                <li class="timeline-item">
+                                    <div class="timeline-time">{{ transaction.movement_time }}</div>
+                                    <div class="timeline-content">
+                                        {{ transaction.details }}
+                                        <div class="timeline-route">
+                                            {{ transaction.departure_yard }} 
+                                            <span class="timeline-arrow">→</span> 
+                                            {{ transaction.arrival_yard }}
+                                        </div>
                                     </div>
-                                </div>
-                            </li>
-                        {% empty %}
-                            <li class="timeline-item">
-                                <div class="timeline-content">
-                                    No transactions available.
-                                </div>
-                            </li>
-                        {% endfor %}
-                    </ul>
+                                </li>
+                            {% empty %}
+                                <li class="timeline-item">
+                                    <div class="timeline-content">
+                                        No transactions available.
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

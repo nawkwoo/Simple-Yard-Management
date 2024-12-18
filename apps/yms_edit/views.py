@@ -26,13 +26,13 @@ from apps.yms_view.models import Transaction
 from apps.yms_view.utils import process_order
 from apps.dashboard.forms import CSVUploadForm
 
-
 from geopy.geocoders import Nominatim
+
 
 def get_lat_lon(address):
     # Geolocator 생성
     geolocator = Nominatim(user_agent="geoapi")
-    
+
     # 주소를 위도, 경도로 변환
     location = geolocator.geocode(address)
     if location:
@@ -48,10 +48,6 @@ class EquipmentAndYardListView(TemplateView):
     template_name = 'yms_edit/equipment_list.html'
 
     def get_context_data(self, **kwargs):
-        """
-        장비 유형별로 활성화된 장비를 필터링하여 컨텍스트에 추가합니다.
-        또한, 야드 필터링 및 장비 유형 필터링을 적용합니다.
-        """
         context = super().get_context_data(**kwargs)
         equipment_types = ['truck', 'chassis', 'container', 'trailer']
         model_classes = {
@@ -67,10 +63,8 @@ class EquipmentAndYardListView(TemplateView):
         for eq_type in equipment_types:
             model_class = model_classes[eq_type]
             equipments[eq_type + '_list'] = model_class.objects.all()
-            #equipments[eq_type + '_list'] = model_class.objects.filter(is_active=True)
 
         # 야드 및 필터 파라미터를 가져옵니다.
-        #all_yards = Yard.objects.filter(is_active=True)
         all_yards = Yard.objects.all()
         yards = all_yards
 
@@ -84,7 +78,7 @@ class EquipmentAndYardListView(TemplateView):
                 for eq_type in equipment_types:
                     equipments[eq_type + '_list'] = equipments[eq_type + '_list'].filter(site__yard__id=yard_id_int)
             except ValueError:
-                pass  # yard_id가 유효한 정수가 아닐 경우 필터를 적용하지 않습니다.
+                pass  # yard_id가 유효한 정수가 아닐 경우 필터를 적용하지 않음
 
         # 장비 유형 필터링
         if types:
@@ -134,9 +128,6 @@ class YardCreateView(CreateView):
     """
     model = Yard
     form_class = YardCreateForm
-    #address = "서울특별시 중구 세종대로 110"
-    #latitude, longitude = get_lat_lon(address)
-
     template_name = 'yms_edit/yard_form.html'
 
     def get_context_data(self, **kwargs):
@@ -146,9 +137,6 @@ class YardCreateView(CreateView):
         return context
 
     def form_valid(self, form):
-        """
-        폼이 유효할 때, 야드와 관련된 사이트를 생성합니다.
-        """
         response = super().form_valid(form)
         equipment_types = form.cleaned_data.get('equipment_types', [])
         for equipment_type in equipment_types:
@@ -180,9 +168,6 @@ class YardUpdateView(UpdateView):
         return context
 
     def form_valid(self, form):
-        """
-        폼이 유효할 때, 기존 사이트를 삭제하고 새 사이트를 생성합니다.
-        """
         response = super().form_valid(form)
         equipment_types = form.cleaned_data.get('equipment_types', [])
         self.object.sites.all().delete()
@@ -221,9 +206,6 @@ class EquipmentDetailView(DetailView):
     context_object_name = 'equipment'
 
     def get_object(self):
-        """
-        URL 파라미터에 따라 해당 장비 객체를 반환합니다.
-        """
         model = self.kwargs.get('model')
         pk = self.kwargs.get('pk')
         model_class = {
@@ -237,18 +219,13 @@ class EquipmentDetailView(DetailView):
         return get_object_or_404(model_class, pk=pk)
 
     def get_context_data(self, **kwargs):
-        """
-        장비와 관련된 트랜잭션 데이터를 컨텍스트에 추가합니다.
-        """
         context = super().get_context_data(**kwargs)
         equipment = self.get_object()
         model = self.kwargs.get('model').capitalize()
 
-        # 트랜잭션 필터링: equipment_type과 equipment id를 기준으로 필터링
         transactions = Transaction.objects.filter(
             equipment_type=model,
-            truck_id=equipment.id  # 'truck_id' 또는 올바른 필드로 수정
-            #equipment=equipment.id
+            truck_id=equipment.id
         ).order_by('-movement_time')
 
         context['transactions'] = transactions
@@ -261,24 +238,17 @@ class EquipmentCreateView(CreateView):
     장비 추가 뷰.
     """
     template_name = 'yms_edit/equipment_form.html'
+
     def find_smallest_missing(self, positions, max_value):
         if not positions:
-            return 1  # If the list is empty, return 1
-
-        position_set = set(positions)  # Convert list to a set for fast lookup
-
-        # Iterate from 1 to max_value to find the first missing number
+            return 1
+        position_set = set(positions)
         for i in range(1, max_value + 1):
             if i not in position_set:
                 return i
-
-        # If no missing number is found, return the next integer after max_value
         return max_value + 1
-    
+
     def get_form_class(self):
-        """
-        URL 파라미터에 따라 적절한 폼 클래스를 반환합니다.
-        """
         model = self.kwargs.get('model')
         form_class = {
             'truck': TruckForm,
@@ -291,26 +261,27 @@ class EquipmentCreateView(CreateView):
         return form_class
 
     def get_form_kwargs(self):
-        """
-        폼에 equipment_type을 전달합니다.
-        """
         kwargs = super().get_form_kwargs()
         model = self.kwargs.get('model').capitalize()
         kwargs['equipment_type'] = model
         return kwargs
 
     def form_valid(self, form):
-        """
-        폼이 유효할 때, 성공 메시지를 추가합니다.
-        """
         response = super().form_valid(form)
         equipment = form.instance
-        # YardInventory 객체 생성
+        equipment_type = self.kwargs.get('model').capitalize()
+
+        # --- 여기서부터 로그 추가 ---
+        print("[DEBUG] form_valid in EquipmentCreateView called.")
+        print(f"[DEBUG] equipment: {equipment}, equipment_id: {equipment.id}, equipment_type: {equipment_type}")
+
         yard = Yard.objects.filter(
             yard_id=equipment.site.yard.yard_id
-        ).first()  # 기본 야드 선택 (변경 필요 시 로직 추가)
+        ).first()
 
-        equipment_type = self.kwargs.get('model').capitalize()
+        # yard 확인
+        print(f"[DEBUG] Selected yard: {yard} (ID: {yard.id if yard else 'None'})")
+
         equipment_capcity = Site.objects.filter(
             yard_id=yard.id,
             equipment_type=equipment_type
@@ -321,18 +292,28 @@ class EquipmentCreateView(CreateView):
             equipment_type=equipment_type,
             is_available=True
         ).values_list('position', flat=True)
+
+        # positions 확인
+        print(f"[DEBUG] Existing positions in yard {yard.id} for {equipment_type}: {list(positions)}")
+
         position = self.find_smallest_missing(positions, equipment_capcity)
+        print(f"[DEBUG] Selected position: {position}")
+
+        # YardInventory 생성 직전 로그
+        print(f"[DEBUG] Creating YardInventory with equipment_id={equipment.id}, equipment_type={equipment_type}, yard_id={yard.id}")
 
         YardInventory.objects.create(
             yard=yard,
-            equipment_type=self.kwargs.get('model').capitalize(),
+            equipment_type=equipment_type,
             equipment_id=equipment.id,  # Equipment의 ID 사용
             is_available=equipment.is_active,
             position=position
-        )        
+        )
+        # --- 로그 추가 끝 ---
+
         messages.success(
             self.request,
-            f"{self.kwargs.get('model').capitalize()} 장비가 성공적으로 추가되었습니다."
+            f"{equipment_type} 장비가 성공적으로 추가되었습니다."
         )
         return response
 
@@ -347,9 +328,6 @@ class EquipmentUpdateView(UpdateView):
     template_name = 'yms_edit/equipment_form.html'
 
     def get_form_class(self):
-        """
-        URL 파라미터에 따라 적절한 폼 클래스를 반환합니다.
-        """
         model = self.kwargs.get('model')
         form_class = {
             'truck': TruckForm,
@@ -362,18 +340,12 @@ class EquipmentUpdateView(UpdateView):
         return form_class
 
     def get_form_kwargs(self):
-        """
-        폼에 equipment_type을 전달합니다.
-        """
         kwargs = super().get_form_kwargs()
         model = self.kwargs.get('model').capitalize()
         kwargs['equipment_type'] = model
         return kwargs
 
     def get_object(self):
-        """
-        URL 파라미터에 따라 해당 장비 객체를 반환합니다.
-        """
         model = self.kwargs.get('model')
         pk = self.kwargs.get('pk')
         model_class = {
@@ -387,20 +359,21 @@ class EquipmentUpdateView(UpdateView):
         return get_object_or_404(model_class, pk=pk)
 
     def form_valid(self, form):
-        """
-        폼이 유효할 때, 성공 메시지를 추가합니다.
-        """
         response = super().form_valid(form)
         equipment = form.instance
+        print("[DEBUG] form_valid in EquipmentUpdateView called.")
+        print(f"[DEBUG] Updating equipment: {equipment}, equipment_id: {equipment.id}")
 
         # YardInventory 업데이트 로직
         try:
             yard_inventory = YardInventory.objects.get(equipment_id=equipment.id)
+            print("[DEBUG] Found YardInventory:", yard_inventory)
             yard_inventory.equipment_type = self.kwargs.get('model').capitalize()
             yard_inventory.is_available = equipment.is_active
-            # 필요에 따라 추가 필드 업데이트 가능
             yard_inventory.save()
+            print("[DEBUG] Updated YardInventory:", yard_inventory)
         except YardInventory.DoesNotExist:
+            print("[DEBUG] YardInventory does not exist for this equipment. Consider creating one if needed.")
             messages.warning(
                 self.request,
                 "연결된 YardInventory가 없어 새로 생성이 필요합니다."
@@ -423,9 +396,6 @@ class EquipmentDeleteView(DeleteView):
     template_name = 'yms_edit/equipment_confirm_delete.html'
 
     def get_object(self):
-        """
-        URL 파라미터에 따라 해당 장비 객체를 반환합니다.
-        """
         model = self.kwargs.get('model')
         pk = self.kwargs.get('pk')
         model_class = {
@@ -439,8 +409,5 @@ class EquipmentDeleteView(DeleteView):
         return get_object_or_404(model_class, pk=pk)
 
     def get_success_url(self):
-        """
-        삭제 후 성공 메시지를 추가하고, 장비 목록 페이지로 리디렉션합니다.
-        """
         messages.success(self.request, "장비가 성공적으로 삭제되었습니다.")
         return reverse_lazy('yms_edit:equipment-list')

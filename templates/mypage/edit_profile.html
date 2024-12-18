@@ -1,29 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>프로필 수정</title>
+   <style>
+       html, body {
+           margin: 0;
+           padding: 0;
+           height: 100%;
+           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+       }
 
+       body {
+           background-color: #f8f9fa;
+           color: #2c3e50;
+           display: flex;
+       }
 
-{% block content %}
-  <h2>프로필 수정</h2>
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <div class="form-group">
-      {{ user_form.username.label_tag }}
-      {{ user_form.username }}
-      {{ user_form.username.errors }}
-    </div>
-    <div class="form-group">
-      {{ profile_form.gender.label_tag }}
-      {{ profile_form.gender }}
-      {{ profile_form.gender.errors }}
-    </div>
-    <div class="form-group">
-      {{ profile_form.birth_date.label_tag }}
-      {{ profile_form.birth_date }}
-      {{ profile_form.birth_date.errors }}
-    </div>
-    <div class="form-group">
-      {{ profile_form.has_car.label_tag }}
-      {{ profile_form.has_car }}
-      {{ profile_form.has_car.errors }}
-    </div>
-    <button type="submit" class="btn btn-primary">수정</button>
-  </form>
-{% endblock %}
+       .main-content {
+           flex: 1;
+           {% comment %} margin-left: 180px; {% endcomment %}
+           padding: 32px;
+           min-height: 100vh;
+           box-sizing: border-box;
+           display: flex;
+           justify-content: center;
+           align-items: center;
+       }
+
+       .container {
+           background: white;
+           padding: 2rem;
+           border-radius: 8px;
+           box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+           width: 100%;
+           max-width: 400px;
+       }
+
+       h2 {
+           color: #2c3e50;
+           font-size: 1.5rem;
+           margin: 0 0 1.5rem 0;
+           font-weight: 600;
+           text-align: center;
+       }
+
+       .form-group {
+           margin-bottom: 1.5rem;
+       }
+
+       label {
+           display: block;
+           margin-bottom: 0.5rem;
+           color: #2c3e50;
+           font-size: 14px;
+           font-weight: 500;
+       }
+
+       input, select {
+           width: 100%;
+           padding: 8px 12px;
+           border: 1px solid #e9ecef;
+           border-radius: 5px;
+           font-size: 14px;
+           color: #2c3e50;
+           box-sizing: border-box;
+           transition: all 0.2s ease;
+       }
+
+       input:focus, select:focus {
+           outline: none;
+           border-color: #1abc9c;
+           box-shadow: 0 0 0 2px rgba(26, 188, 156, 0.1);
+       }
+
+       /* 체크박스 스타일 별도 지정 */
+       input[type="checkbox"] {
+           width: auto;
+           margin-right: 8px;
+       }
+
+       .errorlist {
+           list-style: none;
+           padding: 0;
+           margin: 4px 0 0;
+           color: #e74c3c;
+           font-size: 12px;
+       }
+
+       button {
+           width: 100%;
+           padding: 10px;
+           background: #1abc9c;
+           color: white;
+           border: none;
+           border-radius: 5px;
+           font-size: 14px;
+           font-weight: 500;
+           cursor: pointer;
+           transition: all 0.2s ease;
+       }
+
+       button:hover {
+           background: #16a085;
+           transform: translateY(-1px);
+           box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+       }
+
+       @media (max-width: 768px) {
+           .main-content {
+               margin-left: 0;
+               padding: 16px;
+               padding-bottom: 80px;
+           }
+
+           .container {
+               padding: 1.5rem;
+           }
+
+           h2 {
+               font-size: 1.25rem;
+           }
+       }
+   </style>
+</head>
+<body>
+   {% include 'nav.html' %}
+   
+   <div class="main-content">
+       <div class="container">
+           {% block content %}
+           <h2>프로필 수정</h2>
+           <form method="post" enctype="multipart/form-data">
+               {% csrf_token %}
+               <div class="form-group">
+                   {{ user_form.username.label_tag }}
+                   {{ user_form.username }}
+                   {{ user_form.username.errors }}
+               </div>
+               <div class="form-group">
+                   {{ profile_form.gender.label_tag }}
+                   {{ profile_form.gender }}
+                   {{ profile_form.gender.errors }}
+               </div>
+               <div class="form-group">
+                   {{ profile_form.birth_date.label_tag }}
+                   {{ profile_form.birth_date }}
+                   {{ profile_form.birth_date.errors }}
+               </div>
+               <div class="form-group">
+                   {{ profile_form.has_car.label_tag }}
+                   {{ profile_form.has_car }}
+                   {{ profile_form.has_car.errors }}
+               </div>
+               <button type="submit">수정</button>
+           </form>
+           {% endblock %}
+       </div>
+   </div>
+</body>
+</html>
