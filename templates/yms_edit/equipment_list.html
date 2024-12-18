@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>장비 및 야드 리스트</title>
+    <style>
+        /* 전체 레이아웃 설정 */
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+                         Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            display: flex;
+            height: 100vh;
+            background-color: #f8f9fa;
+        }
+
+        /* 메인 콘텐츠 영역 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+            gap: 20px;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        /* 섹션 스타일 */
+        .section {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 24px;
+            box-sizing: border-box;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .section.half {
+            width: calc(50% - 10px);
+            min-width: 300px;
+            height: calc(50% - 10px);
+            overflow: hidden;
+        }
+
+        /* 필터 버튼 스타일 */
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .filter-button {
+            padding: 8px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            background-color: #fff;
+            color: #2c3e50;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        .filter-button.active {
+            background-color: #1abc9c;
+            color: white;
+            border-color: #1abc9c;
+        }
+        .filter-button:hover {
+            background-color: #f5f5f5;
+            border-color: #1abc9c;
+        }
+        .filter-button.active:hover {
+            background-color: #16a085;
+        }
+
+        /* 플러스 아이콘 스타일 */
+        .filter-button .add-icon {
+            width: 20px;
+            height: 20px;
+            background-color: #1abc9c;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .filter-button .add-icon:hover {
+            background-color: #16a085;
+            transform: scale(1.1);
+        }
+
+        /* 리스트 스타일 */
+        .list-container {
+            max-height: calc(100% - 60px);
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+        .list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .list-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        .list-container::-webkit-scrollbar-thumb {
+            background: #1abc9c;
+            border-radius: 3px;
+        }
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+            transition: all 0.2s ease;
+        }
+        .list-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(4px);
+        }
+        .list-item:last-child {
+            border-bottom: none;
+        }
+        .list-item a {
+            text-decoration: none;
+            color: #2c3e50;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .list-icon {
+            font-size: 24px;
+            opacity: 0.8;
+        }
+
+        /* 제목 스타일 */
+        h2 {
+            color: #2c3e50;
+            font-size: 20px;
+            margin: 0 0 20px 0;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        h3 {
+            color: #2c3e50;
+            font-size: 16px;
+            margin: 16px 0;
+        }
+
+        /* 토글 스위치 스타일 */
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .toggle-switch-label {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            transition: background-color 0.3s ease;
+        }
+        .toggle-switch input:checked + .toggle-switch-label {
+            background-color: #1abc9c;
+        }
+        .toggle-switch-label::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+        .toggle-switch input:checked + .toggle-switch-label::after {
+            transform: translateX(20px);
+        }
+        .toggle-switch input {
+            display: none;
+        }
+
+        /* 지도 스타일 */
+        #map {
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- 네비게이션 바 포함 -->
+    {% include "nav.html" %}
+
+    <!-- 메인 콘텐츠 영역 -->
+    <div class="main-content">
+        <!-- 왼쪽 위 섹션: 지도 API 영역 -->
+        <div class="section half">
+            <h2>지도 영역</h2>
+            <div id="map" style="width:100%; height:calc(100% - 40px); border-radius:10px;">
+                <!-- 지도 API 공간 -->
+            </div>
+        </div>
+
+        <!-- 오른쪽 위 섹션: 야드 리스트 -->
+        <div class="section half">
+            <h2>야드 리스트</h2>
+            {% if yards %}
+                <div class="list-container">
+                    {% for yard in yards %}
+                        <div class="list-item">
+                            <a href="{% url 'yms_edit:yard-detail' pk=yard.pk %}">
+                                <span class="list-icon">🏡</span>
+                                {{ yard.division.name }} - {{ yard.yard_id }} ({{ yard.is_active|yesno:"활성화,비활성화" }})
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>선택된 야드가 없습니다.</p>
+            {% endif %}
+        </div>
+
+        <!-- 왼쪽 아래 섹션: 필터링 영역 -->
+        <div class="section half">
+            <h2>필터링</h2>
+            <div class="filter-buttons">
+                <div class="filter-button {% if not selected_yard_id %}active{% endif %}" onclick="applyFilter({ yard: '' })">
+                    전체 야드
+                </div>
+                {% for yard in all_yards %}
+                    <div class="filter-button {% if selected_yard_id == yard.id %}active{% endif %}" onclick="applyFilter({ yard: '{{ yard.id }}' })">
+                        {{ yard.division.name }} - {{ yard.yard_id }}
+                    </div>
+                {% endfor %}
+                <div class="filter-button" onclick="addYard()">
+                    야드 추가
+                    <span class="add-icon">+</span>
+                </div>
+            </div>
+            <h3>장비 타입</h3>
+            <div class="filter-buttons">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggle-all" {% if all_types_selected %}checked{% endif %} onchange="toggleAllTypes(this.checked)">
+                    <span class="toggle-switch-label"></span>
+                    <span>전체 선택</span>
+                </label>
+            </div>
+            <div class="filter-buttons">
+                <div class="filter-button {% if 'truck' in selected_types %}active{% endif %}" onclick="toggleTypeFilter('truck')">
+                    트럭
+                    <span class="add-icon" onclick="event.stopPropagation(); addEquipment('truck');">+</span>
+                </div>
+                <div class="filter-button {% if 'chassis' in selected_types %}active{% endif %}" onclick="toggleTypeFilter('chassis')">
+                    섀시
+                    <span class="add-icon" onclick="event.stopPropagation(); addEquipment('chassis');">+</span>
+                </div>
+                <div class="filter-button {% if 'container' in selected_types %}active{% endif %}" onclick="toggleTypeFilter('container')">
+                    컨테이너
+                    <span class="add-icon" onclick="event.stopPropagation(); addEquipment('container');">+</span>
+                </div>
+                <div class="filter-button {% if 'trailer' in selected_types %}active{% endif %}" onclick="toggleTypeFilter('trailer')">
+                    트레일러
+                    <span class="add-icon" onclick="event.stopPropagation(); addEquipment('trailer');">+</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 오른쪽 아래 섹션: 장비 리스트 -->
+        <div class="section half">
+            <h2>장비 리스트</h2>
+            <div class="list-container">
+                {% if trucks %}
+                    {% for truck in trucks %}
+                        <div class="list-item">
+                            <a href="{% url 'yms_edit:equipment-detail' model='truck' pk=truck.pk %}">
+                                <span class="list-icon">🚚</span>
+                                트럭: {{ truck.truck_id }} - {{ truck.serial_number }} - ({{ truck.is_active|yesno:"운송 가능,운송 불가" }})
+                            </a>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                {% if chassis %}
+                    {% for chassis_item in chassis %}
+                        <div class="list-item">
+                            <a href="{% url 'yms_edit:equipment-detail' model='chassis' pk=chassis_item.pk %}">
+                                <span class="list-icon">🛞</span>
+                                섀시: {{ chassis_item.chassis_id }} - {{ chassis_item.serial_number }} - ({{ chassis_item.is_active|yesno:"운송 가능,운송 불가" }})
+                            </a>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                {% if containers %}
+                    {% for container in containers %}
+                        <div class="list-item">
+                            <a href="{% url 'yms_edit:equipment-detail' model='container' pk=container.pk %}">
+                                <span class="list-icon">📦</span>
+                                컨테이너: {{ container.container_id }} - {{ container.serial_number }} - ({{ container.is_active|yesno:"운송 가능,운송 불가" }})
+                            </a>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                {% if trailers %}
+                    {% for trailer in trailers %}
+                        <div class="list-item">
+                            <a href="{% url 'yms_edit:equipment-detail' model='trailer' pk=trailer.pk %}">
+                                <span class="list-icon">🚛</span>
+                                트레일러: {{ trailer.trailer_id }} - {{ trailer.serial_number }} - ({{ trailer.is_active|yesno:"운송 가능,운송 불가" }})
+                            </a>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                {% if not trucks and not chassis and not containers and not trailers %}
+                    <p>선택된 장비가 없습니다.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const selectedTypes = new Set({% if selected_types %}{{ selected_types|safe }}{% else %}[] {% endif %});
+        const allTypes = ['truck', 'chassis', 'container', 'trailer'];
+
+        function applyFilter(params) {
+            const url = new URL(window.location.href);
+            Object.keys(params).forEach(key => {
+                if (params[key]) {
+                    url.searchParams.set(key, params[key]);
+                } else {
+                    url.searchParams.delete(key);
+                }
+            });
+            window.location.href = url.toString();
+        }
+
+        function toggleTypeFilter(type) {
+            if (selectedTypes.has(type)) {
+                selectedTypes.delete(type);
+            } else {
+                selectedTypes.add(type);
+            }
+            document.getElementById('toggle-all').checked = (selectedTypes.size === allTypes.length);
+            applyFilter({ types: Array.from(selectedTypes).join(',') });
+        }
+
+        function toggleAllTypes(checked) {
+            if (checked) {
+                allTypes.forEach(type => selectedTypes.add(type));
+            } else {
+                selectedTypes.clear();
+            }
+            applyFilter({ types: Array.from(selectedTypes).join(',') });
+        }
+
+        function addEquipment(model) {
+            const urlTemplate = "{% url 'yms_edit:equipment-add' model='MODEL_PLACEHOLDER' %}";
+            const url = urlTemplate.replace('MODEL_PLACEHOLDER', model);
+            window.location.href = url;
+        }
+
+        function addYard() {
+            window.location.href = "{% url 'yms_edit:yard-add' %}";
+        }
+
+        // 지도 초기화 함수
+        function initMap() {
+            // 지도의 기본 위치 설정 (예: 첫 번째 야드의 위치 또는 기본 위치)
+            {% if all_yards and all_yards.0.latitude and all_yards.0.longitude %}
+                var mapCenter = { lat: {{ all_yards.0.latitude }}, lng: {{ all_yards.0.longitude }} };
+            {% else %}
+                var mapCenter = { lat: 37.5665, lng: 126.9780 }; // 기본 위치 (서울 시청)
+            {% endif %}
+
+            // 지도 객체 생성
+            var map = new google.maps.Map(document.getElementById('map'), {
+                center: mapCenter,
+                zoom: 12
+            });
+
+            // 마커 추가 (야드 위치 표시)
+            {% for yard in all_yards %}
+                {% if yard.latitude and yard.longitude %}
+                    var yardPosition = { lat: {{ yard.latitude }}, lng: {{ yard.longitude }} };
+                    var marker = new google.maps.Marker({
+                        position: yardPosition,
+                        map: map,
+                        title: '{{ yard.division.name }} - {{ yard.yard_id }}'
+                    });
+                {% endif %}
+            {% endfor %}
+        }
+
+        // 페이지 로드 후 지도 초기화 함수 호출
+        window.onload = function() {
+            initMap();
+        };
+    </script>
+
+    <!-- 구글 맵 API 스크립트 추가 -->
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBbYuj8MhQKY-WSzDzQGWbF41EvebIYru8&callback=initMap">
+    </script>
+</body>
+</html>

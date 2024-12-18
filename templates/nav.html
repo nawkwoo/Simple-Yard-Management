@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+        }
+
+        .sidebar {
+            background-color: #2c3e50;
+            width: 180px;         /* 너비는 유지 */
+            height: 100vh;
+            padding: 15px 0;      /* 좌우 패딩 제거하고 상하 패딩만 유지 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: width 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .nav-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            padding: 0 15px;      /* 버튼 컨테이너에 패딩 추가 */
+        }
+
+        /* 나머지 스타일은 동일하게 유지 */
+        .nav-buttons a {
+            text-decoration: none;
+            color: #ecf0f1;
+            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-buttons a::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #1abc9c;
+            transition: width 0.3s ease;
+        }
+
+        .nav-buttons a:hover::before {
+            width: 100%;
+        }
+
+        .nav-buttons a:hover {
+            color: #1abc9c;
+        }
+
+        .nav-buttons a.active {
+            color: #1abc9c;
+            font-weight: bold;
+        }
+
+        .my-page {
+            margin-top: auto;
+            text-decoration: none;
+            color: #ecf0f1;
+            font-size: 12px;
+            padding: 8px 15px;
+            border: 1px solid #ecf0f1;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .my-page:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: #1abc9c;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="nav-buttons">
+            <a href="{% url 'dashboard:home' %}" class="{% if request.path == '/dashboard/' %}active{% endif %}">HOME</a>
+            <a href="{% url 'yms_edit:equipment-list' %}" class="{% if request.path == '/yms_edit/equipment/' %}active{% endif %}">EDIT</a>
+            <a href="{% url 'yms_view:transaction-list' %}" class="{% if request.path == '/yms_view/transaction/' %}active{% endif %}">VIEW</a>
+            <a href="{% url 'dashboard:order_list' %}" class="{% if request.path == '/dashboard/order/' %}active{% endif %}">ORDER</a>
+        </div>
+        <a href="{% url 'mypage:profile' %}" class="my-page">마이 페이지</a>
+    </div>
+</body>
+</html>

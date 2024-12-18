@@ -1,0 +1,12 @@
+<!-- templates/yms_view/move_equipment.html -->
+
+{% block content %}
+  <h1>장비 이동</h1>
+  <form method="post">
+    {% csrf_token %}
+    <label for="order_id">주문 ID:</label>
+    <input type="number" name="order_id" id="order_id" required><br>
+
+    <button type="submit">이동</button>
+  </form>
+{% endblock %}
